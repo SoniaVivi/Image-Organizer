@@ -1,16 +1,11 @@
 import os
 
-def get_directory_family(path):
-  stack = []
-  stack.append(get_files(path))
-  for elt in stack:
-    for entry in elt:
-      if os.path.isdir(entry.path):
-        stack.append(get_files(entry.path))
-      else:
+def get_files(path, toplevel_only=True):
+  with os.scandir(path) as entries:
+    for entry in entries:
+      is_subdirectory = os.path.isdir(entry.path)
+      if not is_subdirectory:
         yield entry
-
-def get_files(path):
-  with os.scandir(path) as dirs:
-    for entry in dirs:
-      yield entry
+      elif not toplevel_only and is_subdirectory:
+        for nested_directory in get_files(entry.path, toplevel_only):
+          yield nested_directory

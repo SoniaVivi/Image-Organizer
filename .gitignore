@@ -1,1 +1,7 @@
 /imagedb.db
+*/__pycache__
+*/__pycache__/*
+*/.pytest_caches
+*/.pytest_caches/*
+/.vscode
+/.vscode/*

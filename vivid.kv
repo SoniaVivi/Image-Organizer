@@ -1,0 +1,69 @@
+#:kivy 2.0.0
+
+<WorkSpace>:
+  size: root.size
+  canvas:
+    Color:
+      rgba: (.2, .2, .2, 1)
+    Rectangle:
+      size: self.size
+      pos: self.pos
+
+  WorkspaceWrapper:
+    orientation: 'vertical'
+    size: root.size
+
+<ImageIndexContainer>:
+  size_hint: (.75, 1)
+  do_x_scroll: False
+  scroll_wheel_distance: 80
+
+<ImageIndex>:
+  size_hint: (1, None)
+  height: self.minimum_height
+  col_default_width: 250
+  spacing: (10, 10)
+  padding: [10, 10]
+
+<Thumbnail>:
+  source: './tests/test_images/cat1.jpg'
+  size_hint: (.25, None)
+  size_hint_max_x: 250
+  size_hint_min_x: 125
+  height: 125
+
+<Sidebar>:
+  padding: [10, 10, 5, 5]
+  spacing: 10
+  orientation: 'vertical'
+  size_hint: (.25, 1)
+  size_hint_min_x: 250
+
+<SideBarField>:
+  orientation: 'horizontal'
+  # size_hint: (1, 1)
+  size_hint_max_y: 20
+
+<Toolbar>:
+  orientation: 'lr-tb'
+  size_hint_max_y: 30
+
+<ToolbarButton>:
+  size_hint_max_x: 104
+  size_hint_max_y: 30
+  text: 'Add Folder'
+
+<SidebarText>:
+  text_size: (self.width, None)
+
+<SidebarPreview>:
+  size_hint_max_y: 250
+
+<ContextMenu>:
+  size: (180, 200)
+
+<ContextItem>:
+  text_size: (self.width, self.height)
+  padding: (4, 6)
+  size_hint_max_x: 180
+  size_hint_max_y: 32

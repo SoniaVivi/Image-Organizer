@@ -1,7 +1,14 @@
 /imagedb.db
+__pycache__
 */__pycache__
 */__pycache__/*
-*/.pytest_caches
-*/.pytest_caches/*
+.pytest_cache
+*/.pytest_cache
+*/.pytest_cache/*
+__pycache__/*
 /.vscode
 /.vscode/*
+/thumbnails/*
+/tests/thumbnails
+/tests/thumbnails/*
+/nohup.out

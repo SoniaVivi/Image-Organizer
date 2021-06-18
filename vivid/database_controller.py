@@ -8,7 +8,7 @@ class DatabaseController():
       self.connection = self._setup_database(test)
     else:
       self.connection = sqlite3.connect('imagedb.db')
-
+      self.image_table_exists()
   def create(self, table, attributes):
     sql = '''INSERT INTO %s(%s)
              VALUES (%s)''' % (table, ','.join(attributes.keys()),
@@ -16,14 +16,15 @@ class DatabaseController():
     try:
       cur = self.connection.execute(sql, tuple(attributes.values()))
       self.connection.commit()
+      return self.connection.execute('SELECT max(id) FROM %s' % (table,)).fetchone()[0]
     except Exception as e:
       print(e)
 
   def update(self, table, id, new_values):
     for attribute in new_values:
-      self.connection.execute('''UPDATE %s SET %s=? WHERE id = ?''' %\
-                       (table, attribute[0],),
-                       (attribute[1], id,))
+      self.connection.execute('''UPDATE %s SET %s = ? WHERE id = ?''' %
+                       (table, attribute[0]), (attribute[1], str(id),))
+
     self.connection.commit()
 
   def delete(self, table, attribute_pair):
@@ -39,7 +40,13 @@ class DatabaseController():
       return dict(zip(self.get_columns(table), record))
 
   def find_many(self, table, start, stop):
-    return [self.find_by(table, ['id', n]) for n in range(start, stop+1)]
+    total = self.count(table)
+    return [self.find_by(table, ['id', n])
+              for n in range(start, stop+1) if n <= total]
+
+  def next_id(self, table, value):
+    sql = '''SELECT id FROM %s WHERE id > %s'''
+    return self.connection.execute(sql % (table, value,)).fetchone()[0]
 
   def get_columns(self, table):
     cols = self.connection.execute('''PRAGMA table_info(%s)''' % (table,))
@@ -62,6 +69,16 @@ class DatabaseController():
     sql = "SELECT id FROM {} WHERE {}=?".format(table, attribute[0])
     result = self.connection.execute(sql, (attribute[1],)).fetchall()
     return True if len(result) <= 1 else False
+
+  def image_table_exists(self):
+    exists = self.connection.execute('''SELECT count(name)
+                                        FROM sqlite_master
+                                        WHERE type='table'
+                                        AND name='Image' ''').fetchone()[0]
+    if exists == 0:
+      print('Setting up database')
+      self._setup_database(False)
+      print('Database setup complete')
 
   def _setup_database(self, test):
     conn = sqlite3.connect('imagedb.db') if not test else sqlite3.connect(':memory:')

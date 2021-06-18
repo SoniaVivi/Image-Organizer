@@ -2,9 +2,6 @@ import os
 import fleep
 
 class RecordAdd():
-  def __init__(self, table):
-    self.table = table
-
   def get_image_type(self, path):
     with open(path, 'rb') as file:
       info = fleep.get(file.read(128))

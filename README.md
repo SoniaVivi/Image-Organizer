@@ -14,9 +14,20 @@ The project aims to help users to handle large amounts of images in various form
 
 -Providing an easy to use GUI
 
-## Technologies
+**Testing**
 
-Python 3.8.2
+Tests must be ran in the root directory to properly function
+
+**Dependencies**
+
+Python 3.9.5
+
 Fleep 1.0.1
+
 ImageHash 4.1.0
+
 SQLite 3
+
+Kivy 2.0.0
+
+Pytest 6.2.3

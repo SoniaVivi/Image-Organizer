@@ -44,6 +44,12 @@ class DatabaseController():
     return [self.find_by(table, ['id', n])
               for n in range(start, stop+1) if n <= total]
 
+  def search(self, table, column, query):
+    sql = "SELECT id FROM %s WHERE %s LIKE '%s'" % \
+            (table, column, f"%{query}%",)
+    results = self.connection.execute(sql).fetchall()
+    return [self.find_by('Image', ('id', result[0])) for result in results]
+
   def next_id(self, table, value):
     sql = '''SELECT id FROM %s WHERE id > %s'''
     return self.connection.execute(sql % (table, value,)).fetchone()[0]

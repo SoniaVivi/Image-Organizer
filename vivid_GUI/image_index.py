@@ -24,6 +24,7 @@ class ImageIndex(GridLayout):
     self.is_right_click = None
     self.menu = None
     self.scroll_pos = 1.0
+    self.search = False
     self.keyboard = Window.request_keyboard(lambda *args : None, self)
     self.keyboard.bind(on_key_down=self.pressed_key,
                        on_key_up=self.released_key
@@ -37,8 +38,11 @@ class ImageIndex(GridLayout):
     self.fill_space()
 
   def fill_space(self):
+    max_size = self.db_controller.count('Image') if not self.search else\
+                                                    len(self.search_results) - 1
+
     while (len(self.children) / self.cols) <  Window.height / 125 and\
-          self.next_id <= self.db_controller.count('Image'):
+          self.next_id <= max_size:
       self.get_images()
     self.get_images()
 
@@ -47,17 +51,38 @@ class ImageIndex(GridLayout):
     next_id = self.next_id
     last_id = self.next_id - 1
     children = len(self.children)
-    count = self.db_controller.count('Image')
+    count = self.db_controller.count('Image') if not self.search else\
+                                                       len(self.search_results)
 
     if self.next_id > count:
       return
 
-    for img_data in self.find_many('Image', next_id, next_id + quantity):
-      if not img_data:
-        self.next_id = self.db_controller.next_id('Image', last_id)
-        return self.get_images(children + self.cols - len(self.children))
-      last_id = self._thumbnail_from_data(img_data)
+    if not self.search:
+      for img_data in self.find_many('Image', next_id, next_id + quantity):
+        if not img_data:
+          self.next_id = self.db_controller.next_id('Image', last_id)
+          return self.get_images(children + self.cols - len(self.children))
+        last_id = self._thumbnail_from_data(img_data)
+    else:
+      for i in range(next_id, next_id + quantity):
+        if i >= len(self.search_results):
+          break
+        self._thumbnail_from_data(self.search_results[i])
+        last_id = i
+
     self.next_id = last_id + 1
+
+  def search_images(self, search_string):
+    self.search = True
+    self.search_results = self.db_controller.search('Image',
+                                                    'name',
+                                                    search_string
+                                                   )
+    self.next_id = 0
+
+  def clear(self):
+    self.clear_widgets()
+    self.fill_space()
 
   def set_selected(self, data, clicked):
     if self.is_right_click:
@@ -86,9 +111,8 @@ class ImageIndex(GridLayout):
     self.shift = ((304, 'shift') in args)
 
   def released_key(self, *args):
-    if ((13, 'enter') in args) or not self.shift:
-      return
-    self.shift = ((304, 'shift') not in args)
+    if (13, 'enter') not in args and self.shift:
+      self.shift = ((304, 'shift') not in args)
 
   def right_click(self, instance, touch):
     if self.menu:
@@ -104,9 +128,9 @@ class ImageIndex(GridLayout):
 
       if len(self.selected) == 1:
         menu_options += [("Rename", lambda *args: self.rename(on_disk=True)),
-                          ("Rename (disk only)",
-                              lambda *args: self.rename(False, True)),
-                          ("Rename (database only)", self.rename)]
+                         ("Rename (disk only)",
+                           lambda *args: self.rename(False, True)),
+                         ("Rename (database only)", self.rename)]
 
       self.menu = ContextMenu(menu_options, pos=touch.pos)
       self.menu.open()

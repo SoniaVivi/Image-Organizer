@@ -19,22 +19,26 @@ class Sidebar(BoxLayout):
     self.update_children()
 
   def empty_data(self):
-    return {'name': '', 'path': '', 'hash': '', 'image_type': ''}
+    return {'name': '', 'path': '', 'hash': '', 'image_type': '', 'tags': ''}
 
   def update_children(self):
     self.clear_widgets()
+    if not 'tags' in self.img_data:
+      self.img_data['tags'] = ('')
+
     field_data = [
                   ("Name", self.img_data['name']),
                   ("Path", self.img_data['path']),
                   ("Hash", self.img_data['hash']),
-                  ("Format", self.img_data['image_type'])
+                  ("Format", self.img_data['image_type']),
+                  ("Tags", ", ".join(self.img_data['tags']))
                  ]
     self.add_widget(SidebarPreview(source=self.img_data['path']))
     for data in field_data:
       self.add_widget(SidebarField(data[0], data[1]))
 
   def rename(self):
-    self.children[3].editable_field(self.img_data['name'])
+    self.children[4].editable_field(self.img_data['name'])
 
 class SidebarField(BoxLayout):
   def __init__(self, field_name, field_value, **kwargs):

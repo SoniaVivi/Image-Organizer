@@ -13,11 +13,12 @@ class WorkspaceWrapper(BoxLayout):
   def on_add(self):
     self.index_wrapper.index.index.fill_space()
 
-  def on_search(self, instance, *args):
-    if len(instance.text) < 2:
+  def on_search(self, instance, search_tags=False, *args):
+    if len(instance.text) < 2 and not search_tags:
       self.index_wrapper.index.index.search = False
       self.index_wrapper.index.index.next_id = 1
     else:
-      self.index_wrapper.index.index.search_images(instance.text)
+      self.index_wrapper.index.index.search_images(instance.text,
+                                                   tags=search_tags)
 
     self.index_wrapper.index.index.clear()

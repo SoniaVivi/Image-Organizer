@@ -13,7 +13,10 @@ class StatsButton(ToolbarButton):
     super(StatsButton, self).__init__(**kwargs)
     self.text = "Stats"
     self.bind(on_press=self.show_modal)
-    self.stats = {"Images": lambda : self.db_controller.count('Image')}
+    self.stats = {"Images": lambda : self.db_controller.count('Image'),
+                  "Tags": lambda : self.db_controller.count('Tag'),
+                  "Tags on Images":
+                    lambda : self.db_controller.count('ImageTag')}
 
   def show_modal(self, *args):
     modal = ModalView(size_hint=(.95, .95), size_hint_max_x=400)

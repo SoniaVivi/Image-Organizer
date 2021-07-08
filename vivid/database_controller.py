@@ -9,6 +9,7 @@ class DatabaseController():
     else:
       self.connection = sqlite3.connect('imagedb.db')
       self.image_table_exists()
+
   def create(self, table, attributes):
     sql = '''INSERT INTO %s(%s)
              VALUES (%s)''' % (table, ','.join(attributes.keys()),
@@ -33,20 +34,41 @@ class DatabaseController():
                                                     (attribute_pair[1],))
     self.connection.commit()
 
-  def find_by(self, table, attribute_pair):
-    sql = '''SELECT * FROM %s WHERE %s = ?''' % (table, attribute_pair[0],)
-    record = self.connection.execute(sql, (attribute_pair[1],)).fetchone()
-    if record:
-      return dict(zip(self.get_columns(table), record))
+  def find_by(self, table, attributes, fetchall=False):
+    sql = ''
+    if type(attributes) != dict:
+      sql = f"SELECT * FROM {table} WHERE {attributes[0]} = '{attributes[1]}'"
+    else:
+      sql = f"SELECT * FROM {table} WHERE "
+      for (key, value) in attributes.items():
+        sql += f"{key} = '{value}' AND "
+      sql = sql[0:-5]
+
+    columns = self.get_columns(table)
+    records = None
+
+    if fetchall:
+      records = self.connection.execute(sql).fetchall()
+    else:
+      records = self.connection.execute(sql).fetchone()
+
+    if records:
+      if not fetchall:
+        return dict(zip(columns, records))
+      else:
+        return [dict(zip(columns, record)) for record in records]
 
   def find_many(self, table, start, stop):
     total = self.count(table)
     return [self.find_by(table, ['id', n])
               for n in range(start, stop+1) if n <= total]
 
-  def search(self, table, column, query):
-    sql = "SELECT id FROM %s WHERE %s LIKE '%s'" % \
-            (table, column, f"%{query}%",)
+  def search(self, table, attributes):
+    sql = f"SELECT id FROM {table} WHERE "
+    for (column, value) in attributes.items():
+      sql += f"{column} LIKE '%{value}%' AND "
+
+    sql = sql[0:-5]
     results = self.connection.execute(sql).fetchall()
     return [self.find_by('Image', ('id', result[0])) for result in results]
 

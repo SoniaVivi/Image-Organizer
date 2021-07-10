@@ -1,18 +1,18 @@
 # Image Organizer
 
-The project aims to help users to handle large amounts of images in various formats by providing useful features such as:
+**Features**
 
--Identifying and removing duplicates
+* Adding images in a top-level and/or nested directory
 
--Renaming multiple images at once
+* Viewing properties of an image (name, location, hash, tags)
 
--Creating and adding tags to images
+* Tagging Images
 
--Searching by name, tag, and hash
+* Renaming images
 
--Moving multiple images into directories on disk or folders in the database
+* Finding the location of an image in a single double click
 
--Providing an easy to use GUI
+* Filtering images
 
 **Testing**
 

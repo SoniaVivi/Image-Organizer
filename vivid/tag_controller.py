@@ -64,7 +64,7 @@ class TagController:
     excluded_tags = []
     search_tags = []
 
-    for tag in tags:
+    for tag in filter(lambda tag: type(tag) == str and len(tag) > 1, tags):
       if tag[0] == '-':
         excluded_tags.append(tag[1:])
       else:

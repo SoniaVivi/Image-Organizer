@@ -37,7 +37,7 @@ class DatabaseController():
   def find_by(self, table, attributes, fetchall=False):
     sql = ''
     if type(attributes) != dict:
-      sql = f"SELECT * FROM {table} WHERE {attributes[0]} = '{attributes[1]}'"
+      sql = f"SELECT * FROM {table} WHERE {attributes[0]} = \"{attributes[1]}\""
     else:
       sql = f"SELECT * FROM {table} WHERE "
       for (key, value) in attributes.items():

@@ -1,5 +1,8 @@
 # Image Organizer
 
+![mocha＠「背景作画」改訂版](https://user-images.githubusercontent.com/55420399/126858555-d1a11c0d-015b-4a15-a22b-104f00f65faf.png)
+All images belong to mocha＠ 「背景作画」改訂版, https://www.pixiv.net/en/users/648285
+
 **Features**
 
 * Adding images in a top-level and/or nested directory

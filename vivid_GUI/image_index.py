@@ -16,6 +16,7 @@ class ImageIndex(GridLayout):
   find_many = db_controller.find_many
   find_by = db_controller.find_by
   remove = img_controller.remove
+  get_last = db_controller.get_last
 
   def __init__(self, set_preview, rename_image, **kwargs):
     super(ImageIndex, self).__init__(**kwargs)
@@ -56,14 +57,18 @@ class ImageIndex(GridLayout):
     next_id = self.next_id
     last_id = self.next_id - 1
     children = len(self.children)
-    count = self.db_controller.count('Image') if not self.search else\
+    max_id = self.get_last('Image')['id'] if not self.search else\
                                                        len(self.search_results)
 
-    if self.next_id > count:
+    if self.next_id > max_id:
       return
 
     if not self.search:
-      for img_data in self.find_many('Image', next_id, next_id + quantity):
+      query_result = self.find_many('Image', next_id, next_id + quantity)
+      if len(query_result) < 1:
+        query_result.append(None)
+
+      for img_data in query_result:
         if not img_data:
           self.next_id = self.db_controller.next_id('Image', last_id)
           return self.get_images(children + self.cols - len(self.children))

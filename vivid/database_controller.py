@@ -59,9 +59,9 @@ class DatabaseController():
         return [dict(zip(columns, record)) for record in records]
 
   def find_many(self, table, start, stop):
-    total = self.count(table)
+    max_id = self.get_last(table)['id']
     return [self.find_by(table, ['id', n])
-              for n in range(start, stop+1) if n <= total]
+              for n in range(start, stop+1) if n <= max_id]
 
   def search(self, table, attributes):
     sql = f"SELECT id FROM {table} WHERE "
@@ -75,6 +75,16 @@ class DatabaseController():
   def next_id(self, table, value):
     sql = '''SELECT id FROM %s WHERE id > %s'''
     return self.connection.execute(sql % (table, value,)).fetchone()[0]
+
+  def get_last(self, table):
+    columns = self.get_columns(table)
+    record_data = self.connection.execute(
+                                  "SELECT * FROM %s ORDER BY id DESC LIMIT 1" %
+                                                          (table,)).fetchone()
+    if not record_data:
+      record_data = [None for _ in range(0, len(columns))]
+      record_data[0] = -1
+    return dict(zip(columns, record_data))
 
   def get_columns(self, table):
     cols = self.connection.execute('''PRAGMA table_info(%s)''' % (table,))

@@ -25,7 +25,7 @@ class ImageIndex(GridLayout):
     self.set_preview = set_preview
     self.rename_image = rename_image
     self.selected = []
-    self.shift = False
+    self.pressed_keys = {'shift': False, 'ctrl': False}
     self.is_right_click = None
     self.menu = None
     self.tag_popup = False
@@ -102,17 +102,21 @@ class ImageIndex(GridLayout):
       return
     self.set_preview(data)
 
-    if not self.shift:
+    if True not in list(map(lambda x: x[1], self.pressed_keys.items())):
       [selected().remove_background() for selected in self.selected]
       self.selected = [clicked]
-    elif self.shift and clicked not in self.selected:
+    elif clicked in self.selected:
+      return
+    elif self.pressed_keys['shift'] and len(self.selected) > 0:
       self.selected.append(clicked)
       self.select_many()
+    elif self.pressed_keys['ctrl']:
+      self.selected.append(clicked)
 
     return True
 
   def select_many(self):
-    first_index = self.children.index(self.selected[0]())
+    first_index = self.children.index(self.selected[-2]())
     second_index = self.children.index(self.selected[-1]())
     step = -1 if first_index > second_index else 1
 
@@ -121,11 +125,17 @@ class ImageIndex(GridLayout):
       self.selected.append(weakref.ref(self.children[i]))
 
   def pressed_key(self, *args):
-    self.shift = ((304, 'shift') in args)
+    self.pressed_keys['shift'] = (304, 'shift') in args
+    self.pressed_keys['ctrl'] = (305, 'lctrl') in args or (306, 'rctrl') in args
 
   def released_key(self, *args):
-    if (13, 'enter') not in args and self.shift:
-      self.shift = ((304, 'shift') not in args)
+    if (13, 'enter') not in args:
+      if self.pressed_keys['shift']:
+        self.pressed_keys['shift'] = (304, 'shift') not in args
+      if (13, 'enter') not in args and self.pressed_keys['ctrl']:
+        self.pressed_keys['ctrl'] = (304, 'lctrl') not in args and\
+                                    (306, 'rctrl') not in args
+
 
   def right_click(self, instance, touch):
     if self.menu:

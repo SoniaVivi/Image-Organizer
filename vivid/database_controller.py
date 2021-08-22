@@ -58,10 +58,12 @@ class DatabaseController():
       else:
         return [dict(zip(columns, record)) for record in records]
 
-  def find_many(self, table, start, stop):
+  def find_many(self, table, start, stop, asc=True):
     max_id = self.get_last(table)['id']
+    min_id = self.get_first(table)['id']
+    step = 1 if asc else -1
     return [self.find_by(table, ['id', n])
-              for n in range(start, stop+1) if n <= max_id]
+              for n in range(start, stop, step) if n <= max_id and n >= min_id]
 
   def search(self, table, attributes):
     sql = f"SELECT id FROM {table} WHERE "
@@ -72,19 +74,18 @@ class DatabaseController():
     results = self.connection.execute(sql).fetchall()
     return [self.find_by('Image', ('id', result[0])) for result in results]
 
-  def next_id(self, table, value):
-    sql = '''SELECT id FROM %s WHERE id > %s'''
-    return self.connection.execute(sql % (table, value,)).fetchone()[0]
+  def next_id(self, table, value, asc=True):
+    operator = '>' if asc else '<'
+    order_by = 'ASC' if asc else 'DESC'
+    sql = '''SELECT id FROM %s WHERE id %s %s ORDER BY id %s'''
+    return self.connection.execute(sql %
+                              (table, operator, value, order_by,)).fetchone()[0]
+
+  def get_first(self, table):
+    return self._get_limit(table, False)
 
   def get_last(self, table):
-    columns = self.get_columns(table)
-    record_data = self.connection.execute(
-                                  "SELECT * FROM %s ORDER BY id DESC LIMIT 1" %
-                                                          (table,)).fetchone()
-    if not record_data:
-      record_data = [None for _ in range(0, len(columns))]
-      record_data[0] = -1
-    return dict(zip(columns, record_data))
+    return self._get_limit(table)
 
   def get_columns(self, table):
     cols = self.connection.execute('''PRAGMA table_info(%s)''' % (table,))
@@ -117,6 +118,19 @@ class DatabaseController():
       print('Setting up database')
       self._setup_database(False)
       print('Database setup complete')
+
+  def _get_limit(self, table, asc=True):
+    order_by = 'DESC' if asc else 'ASC'
+    placholder_id = -1 if asc else 2 ** 63
+
+    columns = self.get_columns(table)
+    record_data = self.connection.execute(
+                                  "SELECT * FROM %s ORDER BY id %s LIMIT 1" %
+                                                  (table, order_by)).fetchone()
+    if not record_data:
+      record_data = [None for _ in range(0, len(columns))]
+      record_data[0] = placholder_id
+    return dict(zip(columns, record_data))
 
   def _setup_database(self, test):
     conn = sqlite3.connect('imagedb.db') if not test else sqlite3.connect(':memory:')

@@ -3,6 +3,7 @@ from kivy.uix.gridlayout import GridLayout
 from vivid.image_controller import ImageController
 from vivid.database_controller import DatabaseController
 from vivid.tag_controller import TagController
+from vivid.config import Config
 from .context_menu import ContextMenu
 from .thumbnail import Thumbnail
 from .add_tag_popup import AddTagPopup
@@ -13,15 +14,16 @@ class ImageIndex(GridLayout):
   img_controller = ImageController()
   db_controller = DatabaseController()
   tag_controller = TagController()
+  config = Config()
   find_many = db_controller.find_many
   find_by = db_controller.find_by
   remove = img_controller.remove
   get_last = db_controller.get_last
+  get_first = db_controller.get_first
 
   def __init__(self, set_preview, rename_image, **kwargs):
     super(ImageIndex, self).__init__(**kwargs)
     self.bind(width=self.set_cols)
-    self.next_id = 1
     self.set_preview = set_preview
     self.rename_image = rename_image
     self.selected = []
@@ -30,7 +32,8 @@ class ImageIndex(GridLayout):
     self.menu = None
     self.tag_popup = False
     self.scroll_pos = 1.0
-    self.search = False
+    self.sort = self.config.read('image_index', 'sort')
+    self.next_id = self._get_initial_id()
     self.keyboard = Window.request_keyboard(lambda *args : None, self)
     self.keyboard.bind(on_key_down=self.pressed_key,
                        on_key_up=self.released_key
@@ -44,58 +47,84 @@ class ImageIndex(GridLayout):
     self.fill_space()
 
   def fill_space(self):
-    max_size = self.db_controller.count('Image') if not self.search else\
-                                                    len(self.search_results) - 1
+    max_size = 0
+    if self.sort == 'ASC' or self.sort == 'DESC':
+      max_size = self.get_last('Image')['id']
+    elif self.sort == 'search':
+      max_size = len(self.search_results) - 1
 
     while (len(self.children) / self.cols) <  Window.height / 125 and\
-          self.next_id <= max_size:
+          self.next_id <= max_size and\
+          self.next_id >= self.get_first('Image')['id']:
       self.get_images()
     self.get_images()
 
   def get_images(self, quantity=None):
     quantity = self.cols if not quantity else quantity
     next_id = self.next_id
-    last_id = self.next_id - 1
     children = len(self.children)
-    max_id = self.get_last('Image')['id'] if not self.search else\
-                                                       len(self.search_results)
+    max_id = 0
+    if self.sort == 'ASC' or self.sort == 'DESC':
+      max_id = self.get_last('Image')['id']
+    elif self.sort == 'search':
+      max_id = len(self.search_results)
+    min_id = self.get_first('Image')['id']
 
-    if self.next_id > max_id:
+    if self.next_id > max_id or self.next_id < min_id:
       return
 
-    if not self.search:
-      query_result = self.find_many('Image', next_id, next_id + quantity)
-      if len(query_result) < 1:
-        query_result.append(None)
-
-      for img_data in query_result:
-        if not img_data:
-          self.next_id = self.db_controller.next_id('Image', last_id)
-          return self.get_images(children + self.cols - len(self.children))
-        last_id = self._thumbnail_from_data(img_data)
+    if self.sort == 'ASC' or self.sort == 'DESC':
+      self.range_sort(next_id, quantity, children)
     else:
-      for i in range(next_id, next_id + quantity):
-        if i >= len(self.search_results):
-          break
-        self._thumbnail_from_data(self.search_results[i])
-        last_id = i
+      self.search_sort(next_id, quantity)
 
+  def range_sort(self, next_id, quantity, children):
+    last_id = next_id - 1 if self.sort == 'ASC' else next_id
+    if self.sort == 'DESC':
+      quantity = quantity * -1
+    query_result = self.find_many('Image',
+                                  next_id,
+                                  next_id + quantity,
+                                  self.sort == 'ASC')
+    if len(query_result) < 1:
+      query_result.append(None)
+
+    for img_data in query_result:
+      if not img_data:
+        self.next_id =\
+          self.db_controller.next_id('Image', last_id, self.sort == 'ASC')
+        return self.get_images(children + self.cols - len(self.children))
+      last_id = self._thumbnail_from_data(img_data)
+    self.next_id = last_id + 1 if self.sort == 'ASC' else last_id - 1
+
+  def search_sort(self, next_id, quantity):
+    last_id = next_id - 1
+
+    for i in range(next_id, next_id + quantity):
+      if i >= len(self.search_results):
+        break
+      self._thumbnail_from_data(self.search_results[i])
+      last_id = i
     self.next_id = last_id + 1
 
   def search_images(self, search_string, tags=False):
-    self.search = True
-    self.selected = []
+    self.sort = 'search'
     if not tags:
       self.search_results = self.db_controller.search('Image',
                                                       {'name': search_string}
                                                     )
     else:
       self.search_results = self.tag_controller.find(search_string.split(' '))
-    self.next_id = 0
+    self.next_id = self.get_first('Image')['id']
 
   def clear(self):
     self.clear_widgets()
     self.fill_space()
+
+  def update_sort(self, *args):
+    self.sort = self.config.read('image_index', 'sort')
+    self.next_id = self._get_initial_id()
+    self.clear()
 
   def set_selected(self, data, clicked):
     if self.is_right_click:
@@ -207,6 +236,9 @@ class ImageIndex(GridLayout):
 
   def rename(self, in_database=True, on_disk=False):
     self.rename_image(self.selected[0], in_database, on_disk)
+
+  def _get_initial_id(self):
+    return {'ASC': 1, 'DESC': self.get_last('Image')['id']}[self.sort]
 
   def _thumbnail_from_data(self, data):
     data['tags'] = self.tag_controller.all(data['id'])

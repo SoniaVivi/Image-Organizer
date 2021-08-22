@@ -2,13 +2,14 @@ from kivy.uix.boxlayout import BoxLayout
 from .toolbar_modal import ToolbarModal
 from .stats_button import StatsButton
 from .toolbar_button import ToolbarButton
+from .preferences_button import PreferencesButton
 from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.label import Label
 
 class Toolbar(BoxLayout):
-  def __init__(self, on_add, on_search, **kwargs):
+  def __init__(self, on_add, on_search, update_sort, **kwargs):
     super(Toolbar, self).__init__(**kwargs)
     file_button = ToolbarButton(text="Add Images")
     stats_button = StatsButton()
@@ -19,6 +20,7 @@ class Toolbar(BoxLayout):
                         on_search(instance, search_tags=self.checkbox.active))
     self.add_widget(file_button)
     self.add_widget(stats_button)
+    self.add_widget(PreferencesButton(update_sort=update_sort))
     self.add_widget(Widget())
     self.add_widget(toolbar_search)
 

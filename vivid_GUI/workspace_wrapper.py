@@ -5,8 +5,11 @@ from vivid_GUI.index_wrapper import IndexWrapper
 class WorkspaceWrapper(BoxLayout):
   def __init__(self, **kwargs):
     super(WorkspaceWrapper, self).__init__(**kwargs)
-    self.toolbar = Toolbar(on_add=self.on_add, on_search=self.on_search)
     self.index_wrapper = IndexWrapper()
+    self.toolbar = Toolbar(on_add=self.on_add,
+                           on_search=self.on_search,
+                           update_sort=
+                                    self.index_wrapper.index.index.update_sort)
     self.add_widget(self.toolbar)
     self.add_widget(self.index_wrapper)
 

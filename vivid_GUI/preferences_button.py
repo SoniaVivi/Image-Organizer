@@ -46,12 +46,21 @@ class PreferencesModal(ModalView):
       checkbox.bind(on_press=self.set_sort)
       for _ in range(2): wrapper.add_widget(Widget(size_hint_min_y=padding_top))
       wrapper.add_widget(checkbox)
-      wrapper.add_widget(Label(text=sort))
+      wrapper.add_widget(Label(text=self.get_sort_text(sort)))
       buttons_container.add_widget(wrapper)
     container.add_widget(buttons_container)
 
     self.wrapper.add_widget(container)
+  def get_sort_text(self, text):
+    return {'ASC': 'First Added',
+            'First Added': 'ASC',
+            'DESC': 'Last Added',
+            'Last Added': 'DESC',
+           }[text]
 
   def set_sort(self, widget):
-    self.config.set('image_index', 'sort', widget.parent.children[0].text)
+    self.config.set('image_index',
+                    'sort',
+                    self.get_sort_text(widget.parent.children[0].text)
+                   )
 

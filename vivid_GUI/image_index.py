@@ -132,7 +132,7 @@ class ImageIndex(GridLayout):
     self.set_preview(data)
 
     if True not in list(map(lambda x: x[1], self.pressed_keys.items())):
-      [selected().remove_background() for selected in self.selected]
+      [img().remove_background() for img in self.selected if img() is not None]
       self.selected = [clicked]
     elif clicked in self.selected:
       return
@@ -161,8 +161,8 @@ class ImageIndex(GridLayout):
     if (13, 'enter') not in args:
       if self.pressed_keys['shift']:
         self.pressed_keys['shift'] = (304, 'shift') not in args
-      if (13, 'enter') not in args and self.pressed_keys['ctrl']:
-        self.pressed_keys['ctrl'] = (304, 'lctrl') not in args and\
+      if self.pressed_keys['ctrl']:
+        self.pressed_keys['ctrl'] = (305, 'lctrl') not in args and\
                                     (306, 'rctrl') not in args
 
 

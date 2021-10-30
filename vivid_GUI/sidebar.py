@@ -8,15 +8,28 @@ from kivy.uix.modalview import ModalView
 from kivy.uix.textinput import TextInput
 from kivy.app import App
 from kivy.clock import Clock
+from datetime import datetime, timedelta
 from platform import system
 import os
+from vivid.database_controller import DatabaseController
+from vivid.image_controller import ImageController
+from vivid.tag_controller import TagController
+from .store import Store
 
 class Sidebar(BoxLayout):
-  def __init__(self, img_data=None, **kwargs):
+  img_controller = ImageController()
+  db_controller = DatabaseController()
+  tag_controller = TagController()
+
+  def __init__(self, **kwargs):
     super(Sidebar, self).__init__(**kwargs)
-    self.img_data = img_data if img_data else self.empty_data()
+    self.img_data = self.empty_data()
     self.id = 'sidebar'
     self.update_children()
+    self.last_update = datetime.now()
+    Store().dispatch('set_preview_image', self.set_preview)
+    Store().dispatch('rename_image', self.rename_image)
+    Store().dispatch('update_thumbnail', self.update_thumbnail)
 
   def empty_data(self):
     return {'name': '', 'path': '', 'hash': '', 'image_type': '', 'tags': ''}
@@ -39,6 +52,35 @@ class Sidebar(BoxLayout):
 
   def rename(self):
     self.children[4].editable_field(self.img_data['name'])
+
+  def set_preview(self, data=None):
+    self.img_data = data if data else self.empty_data()
+    self.update_children()
+
+  def rename_image(self, thumbnail, in_database, on_disk):
+    self.rename_properties = {'in_database': in_database, 'on_disk': on_disk}
+    self.thumbnail = thumbnail
+    self.rename()
+
+  def update_thumbnail(self, data):
+    time = datetime.now()
+    if time - self.last_update < timedelta(seconds=1):
+      return
+
+    self.last_update = time
+    new_path = ('path', self.thumbnail().data['path'],)
+
+    if 'name' in data:
+      new_path = self.img_controller.rename(
+                                          new_path[1],
+                                          data['name'],
+                                          self.rename_properties['on_disk'],
+                                          self.rename_properties['in_database']
+                                          )
+    updated_data = self.db_controller.find_by('Image', new_path)
+    updated_data['tags'] = self.tag_controller.all(updated_data['id'])
+    self.thumbnail().update(updated_data)
+    self.set_preview(updated_data)
 
 class SidebarField(BoxLayout):
   def __init__(self, field_name, field_value, **kwargs):
@@ -70,7 +112,8 @@ class EditField(TextInput):
     self.multiline = False
 
   def update_field(self):
-    self.root.children[0].index_wrapper.update_thumbnail({'name': self.text})
+    Store()\
+      .select(lambda state : state['update_thumbnail'])({'name': self.text})
 
   def pressed_key(self, *args):
     if ((13, 'enter') in args):
@@ -106,5 +149,6 @@ class SidebarPreview(ButtonBehavior, Image):
     else:
         os.system(f"(nohup nautilus --gtk-no-debug=FLAGS \"{self.source}\") &")
 
+# Create separate class for styling in vivid.kv
 class SidebarText(Label):
   pass

@@ -1,18 +1,5 @@
 #:kivy 2.0.0
 
-<WorkSpace>:
-  size: root.size
-  canvas:
-    Color:
-      rgba: (.2, .2, .2, 1)
-    Rectangle:
-      size: self.size
-      pos: self.pos
-
-  WorkspaceWrapper:
-    orientation: 'vertical'
-    size: root.size
-
 <ImageIndexContainer>:
   size_hint: (.75, 1)
   do_x_scroll: False
@@ -41,7 +28,6 @@
 
 <SideBarField>:
   orientation: 'horizontal'
-  # size_hint: (1, 1)
   size_hint_max_y: 32
 
 <Toolbar>:
@@ -72,3 +58,24 @@
   size_hint: (.5, 1)
   size_hint_max_x: 960
   hint_text: 'Find'
+
+<WorkSpace>:
+  size: root.size
+  canvas:
+    Color:
+      rgba: (.2, .2, .2, 1)
+    Rectangle:
+      size: self.size
+      pos: self.pos
+
+  BoxLayout:
+    orientation: 'vertical'
+    size: root.size
+
+    Toolbar:
+
+    BoxLayout:
+      orientation: 'horizontal'
+      Sidebar:
+
+      ImageIndexContainer:

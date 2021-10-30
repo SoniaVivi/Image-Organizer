@@ -8,8 +8,6 @@ from kivy.app import App
 from kivy.uix.widget import Widget
 from vivid_GUI import sidebar
 from vivid_GUI.image_index_container import ImageIndexContainer
-from vivid_GUI.index_wrapper import IndexWrapper
-from vivid_GUI.workspace_wrapper import WorkspaceWrapper
 from vivid_GUI.toolbar import Toolbar
 from vivid.file_exists import file_exists
 import os

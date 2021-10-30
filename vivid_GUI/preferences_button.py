@@ -6,12 +6,13 @@ from kivy.uix.label import Label
 from kivy.uix.widget import Widget
 from .toolbar_button import ToolbarButton
 from vivid.config import Config
+from .store import Store
 
 class PreferencesButton(ToolbarButton):
-  def __init__(self, update_sort, **kwargs):
+  def __init__(self, **kwargs):
     super(PreferencesButton, self).__init__(**kwargs)
     self.text = "Preferences"
-    self.update_sort = update_sort
+    self.update_sort = Store().subscribe(self, 'update_sort', 'update_sort')
     self.bind(on_press=self.show_modal)
 
   def show_modal(self, *args):

@@ -2,9 +2,9 @@ from .image_index import ImageIndex
 from kivy.uix.scrollview import ScrollView
 
 class ImageIndexContainer(ScrollView):
-  def __init__(self, set_preview, rename_image, **kwargs):
+  def __init__(self, **kwargs):
     super(ImageIndexContainer, self).__init__(**kwargs)
-    self.index = ImageIndex(set_preview=set_preview, rename_image=rename_image)
+    self.index = ImageIndex()
     self.add_widget(self.index)
     self.bind(on_scroll_start=self.scroll_direction)
     self.bind(on_scroll_stop=self.get_pos)

@@ -9,6 +9,7 @@ from .thumbnail import Thumbnail
 from .add_tag_popup import AddTagPopup
 from .remove_tag_popup import RemoveTagPopup
 import weakref
+from .store import Store
 
 class ImageIndex(GridLayout):
   img_controller = ImageController()
@@ -21,11 +22,11 @@ class ImageIndex(GridLayout):
   get_last = db_controller.get_last
   get_first = db_controller.get_first
 
-  def __init__(self, set_preview, rename_image, **kwargs):
+  def __init__(self, **kwargs):
     super(ImageIndex, self).__init__(**kwargs)
     self.bind(width=self.set_cols)
-    self.set_preview = set_preview
-    self.rename_image = rename_image
+    self.set_preview = Store().subscribe(self, 'set_preview_image', 'set_preview')
+    self.rename_image = Store().subscribe(self, 'rename_image', 'rename_image')
     self.selected = []
     self.pressed_keys = {'shift': False, 'ctrl': False}
     self.is_right_click = None
@@ -41,22 +42,26 @@ class ImageIndex(GridLayout):
     self.bind(on_touch_down = self.right_click)
     self.set_cols()
     self.fill_space()
+    Store().dispatch("update_sort", self.update_sort)
+    Store().dispatch("search_images", self.search_images)
 
   def set_cols(self, obj=None, width=Window.width):
     self.cols=int((width / 250))
     self.fill_space()
 
   def fill_space(self):
-    max_size = 0
     if self.sort == 'ASC' or self.sort == 'DESC':
       max_size = self.get_last('Image')['id']
+      while (len(self.children) / self.cols) <  Window.height / 125 and\
+            self.next_id <= max_size and\
+            self.next_id >= self.get_first('Image')['id']:
+        self.get_images()
     elif self.sort == 'search':
       max_size = len(self.search_results) - 1
-
-    while (len(self.children) / self.cols) <  Window.height / 125 and\
-          self.next_id <= max_size and\
-          self.next_id >= self.get_first('Image')['id']:
-      self.get_images()
+      while (len(self.children) / self.cols) <  Window.height / 125 and\
+            self.next_id <= max_size and\
+            self.next_id >= 0:
+        self.get_images()
     self.get_images()
 
   def get_images(self, quantity=None):
@@ -67,8 +72,8 @@ class ImageIndex(GridLayout):
     if self.sort == 'ASC' or self.sort == 'DESC':
       max_id = self.get_last('Image')['id']
     elif self.sort == 'search':
-      max_id = len(self.search_results)
-    min_id = self.get_first('Image')['id']
+      max_id = len(self.search_results) if len(self.search_results) else -1
+    min_id = self.get_first('Image')['id'] if self.sort != 'search' else 0
 
     if self.next_id > max_id or self.next_id < min_id:
       return
@@ -98,24 +103,26 @@ class ImageIndex(GridLayout):
     self.next_id = last_id + 1 if self.sort == 'ASC' else last_id - 1
 
   def search_sort(self, next_id, quantity):
-    last_id = next_id - 1
+    last_id = next_id
 
-    for i in range(next_id, next_id + quantity):
+    for i in range(last_id, last_id + quantity):
       if i >= len(self.search_results):
         break
       self._thumbnail_from_data(self.search_results[i])
-      last_id = i
-    self.next_id = last_id + 1
+      last_id = i + 1
+    self.next_id = last_id
 
-  def search_images(self, search_string, tags=False):
+  def search_images(self, search_string=None, tags=False):
     self.sort = 'search'
     if not tags:
       self.search_results = self.db_controller.search('Image',
                                                       {'name': search_string}
                                                     )
     else:
-      self.search_results = self.tag_controller.find(search_string.split(' '))
-    self.next_id = self.get_first('Image')['id']
+      self.search_results = list(self.tag_controller.find(search_string.split(' ')))
+      self.search_results.sort(key=lambda img : img['id'])
+    self.next_id = 0
+    self.clear()
 
   def clear(self):
     self.clear_widgets()

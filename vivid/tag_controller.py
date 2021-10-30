@@ -71,7 +71,7 @@ class TagController:
         search_tags.append(tag)
 
     images = [self.all(tag) for tag in search_tags]
-    images = [x for _ in images for x in _]
+    images = [x for _ in images for x in _ if x is not None]
     common_images = []
     most_common = Counter([x['id'] for x in images]).most_common()
 
@@ -96,5 +96,4 @@ class TagController:
 
           common_images.append(image)
           break
-
     return tuple(common_images)

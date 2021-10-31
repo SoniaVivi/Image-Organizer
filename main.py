@@ -3,6 +3,7 @@ Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 # If set to below 1000, shifts hightlighted thumbnails on right click
 # Setting it to 1000 or above then resizing lower manually has it work normally
 Config.set('graphics', 'width', '1080')
+Config.set('kivy', 'default_font', ['Lato', './fonts/Lato-Regular.ttf'])
 
 from kivy.app import App
 from kivy.uix.widget import Widget

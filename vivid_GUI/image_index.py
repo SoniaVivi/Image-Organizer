@@ -210,7 +210,7 @@ class ImageIndex(GridLayout):
       def add_tag_to_selected(name, *args):
         for selected in self.selected:
           self.tag_controller.tag(selected().data['id'], name)
-          selected().data['tags'] = (*selected().data['tags'], name)
+          selected().data['tags'] = (*selected().data['tags'], *name.split(' '))
           selected().data['tags'] = tuple(set(selected().data['tags']))
         self.set_preview(selected().data)
 

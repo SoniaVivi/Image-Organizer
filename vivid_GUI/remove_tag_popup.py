@@ -10,7 +10,7 @@ class RemoveTagPopup(ModalView):
     self.on_close = on_close
     wrapper = GridLayout(cols=1, size_hint=(.8, .8))
     self.container = GridLayout(cols=9)
-    remove_button = Button(text='Remove', size_hint_max_y=32,)
+    remove_button = Button(text='Keep above tags', size_hint_max_y=32,)
     remove_button.bind(on_press=self.remove)
     self.selected = []
 

@@ -10,15 +10,16 @@ class TagController:
       self.db.create('Tag', {'name': tag_name})
     return self.db.find_by('Tag', ('name', tag_name))
 
-  def tag(self, image_id, tag_name):
-    if not self.db.exists('Image', ('id', image_id)):
-      return {}
-    tag = self._create(tag_name)
+  def tag(self, image_id, tags):
+    for tag_name in tags.split(' '):
+      if not self.db.exists('Image', ('id', image_id)):
+        continue
+      tag = self._create(tag_name.lower())
 
-    if self.db.exists('ImageTag', {'tag_id': tag['id'], 'image_id': image_id}):
-      return {}
+      if self.db.exists('ImageTag', {'tag_id': tag['id'], 'image_id': image_id}):
+        continue
 
-    self.db.create('ImageTag', {'tag_id': tag['id'], 'image_id': image_id})
+      self.db.create('ImageTag', {'tag_id': tag['id'], 'image_id': image_id})
 
   def all(self, value=None):
     if type(value) == int:

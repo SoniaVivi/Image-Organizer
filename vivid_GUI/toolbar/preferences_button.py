@@ -6,7 +6,7 @@ from kivy.uix.label import Label
 from kivy.uix.widget import Widget
 from .toolbar_button import ToolbarButton
 from vivid.config import Config
-from .store import Store
+from ..store import Store
 
 class PreferencesButton(ToolbarButton):
   def __init__(self, **kwargs):

@@ -7,7 +7,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.label import Label
-from .store import Store
+from ..store import Store
 
 class Toolbar(BoxLayout):
   def __init__(self, **kwargs):

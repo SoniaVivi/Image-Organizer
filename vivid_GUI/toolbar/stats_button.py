@@ -19,7 +19,7 @@ class StatsButton(ToolbarButton):
                     lambda : self.db_controller.count('ImageTag')}
 
   def show_modal(self, *args):
-    modal = ModalView(size_hint=(.95, .95), size_hint_max_x=400)
+    modal = ModalView(size_hint=(.95, .95), size_hint_max_x=900)
     modal.add_widget(self.generate_stats())
     modal.open()
 
@@ -30,8 +30,9 @@ class StatsButton(ToolbarButton):
       wrapper = BoxLayout(orientation="horizontal", size_hint_max_y=32)
 
       parent = BoxLayout(orientation="horizontal")
-      parent.add_widget(Label(text=str(stat_name), size_hint_max_x=200))
-      parent.add_widget(Label(text=str(stat_getter()), size_hint_max_x=200))
+      parent.add_widget(StatsLabel(text=str(stat_name), size_hint_max_x=600))
+      parent.add_widget(StatsLabel(text=str(stat_getter()),
+                                   size_hint_max_x=400, isStat=True))
 
       wrapper.add_widget(Widget())
       wrapper.add_widget(parent)
@@ -40,3 +41,17 @@ class StatsButton(ToolbarButton):
       container.add_widget(wrapper)
 
     return container
+
+class StatsLabel(Label):
+  def __init__(self, isStat=False, **kwargs):
+    super(StatsLabel, self).__init__(**kwargs)
+    self.bind(width=lambda *args: self.set_text_size(isStat))
+    self.valign = 'middle'
+
+  def set_text_size(self, isStat):
+    if isStat:
+      self.text_size = (self.width, self.height)
+      self.halign = 'left'
+    else:
+      self.halign = 'right'
+      self.text_size = (self.width - 25, self.height)

@@ -4,10 +4,10 @@ from vivid.image_controller import ImageController
 from vivid.database_controller import DatabaseController
 from vivid.tag_controller import TagController
 from vivid.config import Config
-from .context_menu import ContextMenu
+from .context_menu.context_menu import ContextMenu
 from .thumbnail import Thumbnail
-from .add_tag_popup import AddTagPopup
-from .remove_tag_popup import RemoveTagPopup
+from .context_menu.add_tag_popup import AddTagPopup
+from .context_menu.remove_tag_popup import RemoveTagPopup
 import weakref
 from .store import Store
 

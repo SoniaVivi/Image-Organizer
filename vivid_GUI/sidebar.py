@@ -86,7 +86,7 @@ class SidebarField(BoxLayout):
   def __init__(self, field_name, field_value, **kwargs):
     super(SidebarField, self).__init__(**kwargs)
     self.name_field = SidebarText(text=self.format_text(field_name),
-                            size_hint_max_x=80)
+                                  size_hint_max_x=80, isFieldName=True)
     self.value_field = SidebarText(text=self.format_text(field_value))
     self.app = App.get_running_app()
     self.add_widget(self.name_field)
@@ -151,4 +151,14 @@ class SidebarPreview(ButtonBehavior, Image):
 
 # Create separate class for styling in vivid.kv
 class SidebarText(Label):
-  pass
+  def __init__(self, isFieldName=False, **kwargs):
+    super(SidebarText, self).__init__(**kwargs)
+    self.bind(width=lambda *args: self.set_text_size(isFieldName))
+
+  def set_text_size(self, isFieldName):
+    if isFieldName:
+      self.text_size = (self.width - 15, self.height)
+      self.halign = 'right'
+      self.valign = 'middle'
+    else:
+      self.text_size = (self.width, None)

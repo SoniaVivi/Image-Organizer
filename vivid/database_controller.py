@@ -62,8 +62,13 @@ class DatabaseController():
     max_id = self.get_last(table)['id']
     min_id = self.get_first(table)['id']
     step = 1 if asc else -1
-    return [self.find_by(table, ['id', n])
-              for n in range(start, stop, step) if n <= max_id and n >= min_id]
+    results = []
+    for n in range(start, stop, step):
+      if n <= max_id and n >= min_id:
+        result = self.find_by(table, ['id', n])
+        if result is not None:
+          results.append(result)
+    return results
 
   def search(self, table, attributes):
     sql = f"SELECT id FROM {table} WHERE "

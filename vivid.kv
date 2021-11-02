@@ -12,6 +12,19 @@
   spacing: (10, 10)
   padding: [10, 10]
 
+<TagList>:
+  size_hint: (1, None)
+  height: self.minimum_height
+  col_default_width: 125
+  spacing: (10, 10)
+  padding: [10, 10]
+
+<TagListChild>:
+  width: 125
+  size_hint_min_y: 32
+  text_size: (self.width, self.height)
+  valign: 'middle'
+
 <Thumbnail>:
   source: './tests/test_images/cat1.jpg'
   size_hint: (.25, None)

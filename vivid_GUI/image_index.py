@@ -8,10 +8,10 @@ from .context_menu.context_menu import ContextMenu
 from .thumbnail import Thumbnail
 from .context_menu.add_tag_popup import AddTagPopup
 from .context_menu.remove_tag_popup import RemoveTagPopup
-import weakref
+from .shared.select_behavior import SelectBehavior
 from .store import Store
 
-class ImageIndex(GridLayout):
+class ImageIndex(GridLayout, SelectBehavior):
   img_controller = ImageController()
   db_controller = DatabaseController()
   tag_controller = TagController()
@@ -27,18 +27,11 @@ class ImageIndex(GridLayout):
     self.bind(width=self.set_cols)
     self.set_preview = Store().subscribe(self, 'set_preview_image', 'set_preview')
     self.rename_image = Store().subscribe(self, 'rename_image', 'rename_image')
-    self.selected = []
-    self.pressed_keys = {'shift': False, 'ctrl': False}
-    self.is_right_click = None
     self.menu = None
     self.tag_popup = False
     self.scroll_pos = 1.0
     self.sort = self.config.read('image_index', 'sort')
     self.next_id = self._get_initial_id()
-    self.keyboard = Window.request_keyboard(lambda *args : None, self)
-    self.keyboard.bind(on_key_down=self.pressed_key,
-                       on_key_up=self.released_key
-                      )
     self.bind(on_touch_down = self.right_click)
     self.set_cols()
     self.fill_space()
@@ -134,44 +127,10 @@ class ImageIndex(GridLayout):
     self.clear()
 
   def set_selected(self, data, clicked):
-    if self.is_right_click:
-      return
-    self.set_preview(data)
-
-    if True not in list(map(lambda x: x[1], self.pressed_keys.items())):
-      [img().remove_background() for img in self.selected if img() is not None]
-      self.selected = [clicked]
-    elif clicked in self.selected:
-      return
-    elif self.pressed_keys['shift'] and len(self.selected) > 0:
-      self.selected.append(clicked)
-      self.select_many()
-    elif self.pressed_keys['ctrl']:
-      self.selected.append(clicked)
-
-    return True
-
-  def select_many(self):
-    first_index = self.children.index(self.selected[-2]())
-    second_index = self.children.index(self.selected[-1]())
-    step = -1 if first_index > second_index else 1
-
-    for i in range(first_index, second_index, step):
-      self.children[i].add_background()
-      self.selected.append(weakref.ref(self.children[i]))
-
-  def pressed_key(self, *args):
-    self.pressed_keys['shift'] = (304, 'shift') in args
-    self.pressed_keys['ctrl'] = (305, 'lctrl') in args or (306, 'rctrl') in args
-
-  def released_key(self, *args):
-    if (13, 'enter') not in args:
-      if self.pressed_keys['shift']:
-        self.pressed_keys['shift'] = (304, 'shift') not in args
-      if self.pressed_keys['ctrl']:
-        self.pressed_keys['ctrl'] = (305, 'lctrl') not in args and\
-                                    (306, 'rctrl') not in args
-
+    is_left_click = super().set_selected(clicked)
+    if is_left_click:
+      self.set_preview(data)
+    return is_left_click
 
   def right_click(self, instance, touch):
     if self.menu:

@@ -1,26 +1,44 @@
 from .image_index import ImageIndex
 from kivy.uix.scrollview import ScrollView
+from .tag_list import TagList
+from .store import Store
 
 class ImageIndexContainer(ScrollView):
   def __init__(self, **kwargs):
     super(ImageIndexContainer, self).__init__(**kwargs)
-    self.index = ImageIndex()
-    self.add_widget(self.index)
+    self.set_child()
     self.bind(on_scroll_start=self.scroll_direction)
     self.bind(on_scroll_stop=self.get_pos)
     self.always_overscroll = False
     self.overscroll_effect = False
+    Store().dispatch('set_index', self.set_child)
+
+  def set_child(self, name='image_index'):
+    self.clear_widgets()
+    if name == 'image_index':
+      self.current_child = (ImageIndex(), 'image_index')
+    elif name == 'tag_list':
+      self.current_child = (TagList(search=self.search_from_tag_list),
+                            'tag_list')
+    Store().dispatch('current_index_child', self.current_child[1])
+    self.add_widget(self.current_child[0])
 
   def scroll_direction(self, *args):
     self.scroll_start = self.scroll_y
-    if not self.scroll_start:
-      self.index.get_images()
+    if not self.scroll_start and self.current_child[1] == 'image_index':
+      self.current_child[0].get_images()
     else:
       self.scrolling = True
 
   def get_pos(self, *args):
     if self.scroll_start <= self.scroll_y or not self.scrolling:
       self.scrolling = False
-    elif 800 >= self.to_local(*args[1].pos)[1]:
-      self.index.get_images()
+    elif 800 >= self.to_local(*args[1].pos)[1] and\
+         self.current_child[1] == 'image_index':
+      self.current_child[0].get_images()
     self.scrolling = False
+
+  def search_from_tag_list(self, tags=[]):
+    self.set_child()
+    Store().select(lambda state: state['search_images'])(" ".join(tags), True)
+    Store().select(lambda state: state['searchbar']).text = " ".join(tags)

@@ -5,6 +5,9 @@ Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 Config.set('graphics', 'width', '1080')
 Config.set('kivy', 'default_font', ['Lato', './fonts/Lato-Regular.ttf'])
 
+import os
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 from kivy.app import App
 from kivy.uix.widget import Widget
 from vivid_GUI import sidebar

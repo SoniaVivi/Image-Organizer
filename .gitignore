@@ -13,3 +13,6 @@ __pycache__/*
 /tests/thumbnails/*
 /nohup.out
 config
+/dist
+/main.spec
+/build

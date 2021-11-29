@@ -14,15 +14,15 @@
 
 <TagList>:
   size_hint: (1, None)
-  height: self.minimum_height
+  height: self.minimum_height + 32
   col_default_width: 125
-  spacing: (10, 10)
+  spacing: (10, 0)
   padding: [10, 10]
 
 <TagListChild>:
-  width: 125
+  width: 191
+  size_hint_max_x: 191
   size_hint_min_y: 32
-  text_size: (self.width, self.height)
   valign: 'middle'
 
 <Thumbnail>:

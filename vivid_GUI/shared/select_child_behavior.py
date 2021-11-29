@@ -1,9 +1,11 @@
 from kivy.graphics import Color, Rectangle
+from kivy.clock import Clock
 
 class SelectChildBehavior():
   def __init__(self, press=None, **kwargs):
     self.press = press
     self.is_highlighted = False
+    self.last_press = 1
 
   def add_background(self, bind_pos=True):
     if bind_pos:
@@ -26,3 +28,13 @@ class SelectChildBehavior():
     if self.is_highlighted:
       self.remove_background()
       self.add_background(False)
+
+  def double_press_checker(self, on_single_press, on_double_press, *args):
+    current_time = Clock.get_time()
+
+    if (current_time - self.last_press) <= .250:
+      on_double_press()
+      self.last_press = 0
+    else:
+      self.last_press = current_time
+      Clock.schedule_once(on_single_press, .250)

@@ -6,7 +6,7 @@ from .filesearch import get_files
 from .database_controller import DatabaseController
 from os.path import isdir, isfile
 from pathlib import Path
-
+import random, string
 
 class ImageController():
   def __init__(self, db=None, test=False):
@@ -14,23 +14,24 @@ class ImageController():
     self._create_thumbnails_path(test)
     self.db_controller = db if db else DatabaseController(test)
 
-  def add(self, path, options={'unique': False}):
+  def add(self, path, **kwargs):
     if isdir(path):
-      self.add_directory(path, False, unique=options['unique'])
+      self.add_directory(path, False, **kwargs)
     elif isfile(path):
-      self.add_image(path, unique=options['unique'])
+      self.add_image(path, **kwargs)
     return self
 
-  def add_image(self, path, unique=False):
+  def add_image(self, path, **kwargs):
     img_hash = self.get_hash(path)
-    if not img_hash or \
-       self.db_controller.exists('Image', ('path', path)) or \
-       (unique and self.db_controller.exists('Image', ('hash', img_hash))):
+    if not self._is_valid(path, img_hash, **kwargs):
       return self
+
+    name = self._generate_name(path, img_hash, **kwargs)
+
     record_add = RecordAdd()
     attribute_pairs = [
                        ('path', path),
-                       ('name', os.path.splitext(os.path.basename(path))[0]),
+                       ('name', name ),
                        ('hash', img_hash)
                       ]
 
@@ -44,9 +45,9 @@ class ImageController():
     return self
 
 
-  def add_directory(self, path, toplevel_only=True, unique=False):
+  def add_directory(self, path, toplevel_only=True, **kwargs):
     for file in get_files(path, toplevel_only):
-      self.add_image(file.path, unique)
+      self.add_image(file.path, **kwargs)
     return self
 
   def remove(self, path, db_only=True):
@@ -91,6 +92,21 @@ class ImageController():
       os.mkdir(self.thumbnails_path)
     self.thumbnails_path += '/'
 
+  def _is_valid(self, path, img_hash, **kwargs):
+    if not img_hash or \
+       self.db_controller.exists('Image', ('path', path)) or \
+       (kwargs.get('unique', False) and\
+          self.db_controller.exists('Image', ('hash', img_hash))):
+      return False
+    return True
+
+  def _generate_name(self, path, img_hash, **kwargs):
+    if kwargs.get('scramble_name', False):
+      return self._random_string(32)
+    elif kwargs.get('hash_as_name', False):
+      return img_hash
+    return os.path.splitext(os.path.basename(path))[0]
+
   def rename(self, path, new_name, on_disk=True, in_db=True):
     img_data = self.db_controller.find_by('Image', ('path', path,))
     img_path = ['path', path]
@@ -110,4 +126,7 @@ class ImageController():
       self.db_controller.update('Image', img_data['id'], (('name', new_name,),))
 
     return tuple(img_path)
+
+  def _random_string(self, length):
+   return ''.join(random.choice(string.ascii_lowercase) for i in range(length))
 

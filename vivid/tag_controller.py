@@ -6,15 +6,15 @@ class TagController:
     self.db = db if db else DatabaseController(test)
 
   def _create(self, tag_name):
-    if not self.db.exists('Tag', ('name', tag_name)):
-      self.db.create('Tag', {'name': tag_name})
-    return self.db.find_by('Tag', ('name', tag_name))
+    if not self.db.exists('Tag', ('name', tag_name.lower())):
+      self.db.create('Tag', {'name': tag_name.lower()})
+    return self.db.find_by('Tag', ('name', tag_name.lower()))
 
   def tag(self, image_id, tags):
     for tag_name in tags.split(' '):
       if not self.db.exists('Image', ('id', image_id)):
         continue
-      tag = self._create(tag_name.lower())
+      tag = self._create(tag_name)
 
       if self.db.exists('ImageTag', {'tag_id': tag['id'], 'image_id': image_id}):
         continue

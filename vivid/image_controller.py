@@ -14,11 +14,11 @@ class ImageController():
     self._create_thumbnails_path(test)
     self.db_controller = db if db else DatabaseController(test)
 
-  def add(self, path):
+  def add(self, path, options={'unique': False}):
     if isdir(path):
-      self.add_directory(path, False)
+      self.add_directory(path, False, unique=options['unique'])
     elif isfile(path):
-      self.add_image(path)
+      self.add_image(path, unique=options['unique'])
     return self
 
   def add_image(self, path, unique=False):

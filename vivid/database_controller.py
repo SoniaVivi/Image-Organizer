@@ -57,13 +57,14 @@ class DatabaseController():
         return dict(zip(columns, records))
       else:
         return [dict(zip(columns, record)) for record in records]
+    return records
 
   def find_many(self, table, start, stop, asc=True):
     max_id = self.get_last(table)['id']
     min_id = self.get_first(table)['id']
     step = 1 if asc else -1
     results = []
-    for n in range(start, stop, step):
+    for n in range(start, stop + 1, step):
       if n <= max_id and n >= min_id:
         result = self.find_by(table, ['id', n])
         if result is not None:

@@ -21,9 +21,8 @@ class TestTagController:
 
   def test_tag_image(self):
     self.tag.tag(1, 'Cat')
-
     assert self.db.find_by('ImageTag', ('image_id', 1)) == {'id': 1, 'image_id': 1, 'tag_id': 1}
-    assert self.db.find_by('Tag', ('name', 'Cat')) == {'id': 1, 'name': 'Cat'}
+    assert self.db.find_by('Tag', ('name', 'cat')) == {'id': 1, 'name': 'cat'}
 
     self.tag.tag(1, 'Cat')
 
@@ -36,25 +35,25 @@ class TestTagController:
 
   def test_all(self):
     self.tag.tag(1, 'Nyaa')
-    assert self.tag.all(1) == ('Cat', '♡Meow♡', 'Nyaa')
+    assert self.tag.all(1) == ('cat', '♡meow♡', 'nyaa')
 
-    assert self.tag.all('♡Meow♡') == (self.db.find_by('Image', {'id': 1}),)
+    assert self.tag.all('♡meow♡') == (self.db.find_by('Image', {'id': 1}),)
 
   def test_remove(self):
-    self.tag.remove(1, 'Cat')
+    self.tag.remove(1, 'cat')
 
     assert self.db.count('ImageTag') == 2
     assert self.db.count('Tag') == 2
-    assert self.tag.all(1) == ('♡Meow♡', 'Nyaa')
+    assert self.tag.all(1) == ('♡meow♡', 'nyaa')
 
   def test_find(self):
     self.img.add_image(f"{IMG_PATH}cat2.jpg")
     self.tag.tag(2, 'Nyaa')
 
-    assert self.tag.find(('♡Meow♡', 'Nyaa')) ==\
+    assert self.tag.find(('♡meow♡', 'nyaa')) ==\
                                           (self.db.find_by('Image', {'id': 1}),)
     self.tag.tag(2, '♡Meow♡')
-    self.tag.tag(1, 'Kitty')
+    self.tag.tag(2, 'Kitty')
 
-    assert self.tag.find(('♡Meow♡', 'Nyaa', '-Kitty')) ==\
+    assert self.tag.find(('♡meow♡', 'nyaa', 'kitty')) ==\
                                           (self.db.find_by('Image', {'id': 2}),)

@@ -73,8 +73,8 @@ class TagList(GridLayout, SelectBehavior):
     [child.set_border() for child in self.children]
     row_height = self.rows_minimum[row]
 
-    for i in range((row * self.cols) - 1, (row * self.cols) + 1):
-      self.children[-i].set_border(row_height)
+    for i in range((row * self.cols), (row * self.cols) + 1):
+        self.children[-i].set_border(row_height)
 
   def right_click(self, instance, touch):
     if self.menu:

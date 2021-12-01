@@ -21,7 +21,8 @@ class Toolbar(BoxLayout):
     tag_list_button = ToolbarButton(text="Tag List")
     stats_button = StatsButton()
     toolbar_search = ToolbarSearch(multiline=False)
-    self.checkbox = CheckBox(size_hint_max=(20, 20))
+    self.tag_checkbox = CheckBox(size_hint_max=(20, 20), group="search")
+    self.folder_checkbox = CheckBox(size_hint_max=(20, 20), group="search")
 
     file_button.bind(on_press=lambda x: self.show_modal())
     tag_list_button.bind(on_press=self.toggle_index)
@@ -34,8 +35,10 @@ class Toolbar(BoxLayout):
     self.add_widget(Widget())
     self.add_widget(toolbar_search)
 
-    self.add_widget(self.checkbox)
+    self.add_widget(self.tag_checkbox)
     self.add_widget(Label(text='Tags', size_hint_max=(40, 20)))
+    self.add_widget(self.folder_checkbox)
+    self.add_widget(Label(text='Folder', size_hint_max=(40, 20)))
     self.modal = ToolbarModal(on_add=self.on_add)
     Store().dispatch('searchbar', toolbar_search)
 
@@ -45,7 +48,9 @@ class Toolbar(BoxLayout):
     if len(instance.text) < 2:
       Store().state['update_sort']()
     else:
-      Store().state['search_images'](instance.text, tags=self.checkbox.active)
+      Store().state['search_images'](instance.text,
+                                     tags=self.tag_checkbox.active,
+                                     folder=self.folder_checkbox.active)
 
   def show_modal(self):
     self.modal.reset_path()

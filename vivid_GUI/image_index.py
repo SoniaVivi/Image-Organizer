@@ -105,14 +105,18 @@ class ImageIndex(GridLayout, SelectBehavior):
       last_id = i + 1
     self.next_id = last_id
 
-  def search_images(self, search_string=None, tags=False):
+  def search_images(self, search_string=None, tags=False, folder=False):
     self.sort = 'search'
-    if not tags:
+    if tags:
+      self.search_results = list(self.tag_controller.find(search_string.split(' ')))
+    elif folder:
+      self.search_results = self.db_controller.search('Image',
+                                                      {'path': search_string})
+    else:
       self.search_results = self.db_controller.search('Image',
                                                       {'name': search_string}
                                                     )
-    else:
-      self.search_results = list(self.tag_controller.find(search_string.split(' ')))
+    if tags or folder:
       self.search_results.sort(key=lambda img : img['id'])
     self.next_id = 0
     self.clear()

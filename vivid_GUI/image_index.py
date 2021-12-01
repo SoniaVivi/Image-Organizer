@@ -37,6 +37,7 @@ class ImageIndex(GridLayout, SelectBehavior):
     self.fill_space()
     Store().dispatch("update_sort", self.update_sort)
     Store().dispatch("search_images", self.search_images)
+    Store().dispatch("refresh", self.clear)
 
   def set_cols(self, obj=None, width=Window.width):
     self.cols=int((width / 250))
@@ -123,6 +124,7 @@ class ImageIndex(GridLayout, SelectBehavior):
 
   def clear(self):
     self.clear_widgets()
+    self.next_id = self._get_initial_id()
     self.fill_space()
 
   def update_sort(self, *args):

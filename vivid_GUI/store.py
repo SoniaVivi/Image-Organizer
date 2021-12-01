@@ -6,7 +6,8 @@ class Store():
            'rename_image': lambda : None,
            'set_index': lambda : None,
            'current_index_child': "",
-           'searchbar': lambda: None
+           'searchbar': lambda: None,
+           'refresh': lambda: None,
            }
   subscriptions = {}
 

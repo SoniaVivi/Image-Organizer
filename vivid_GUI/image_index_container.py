@@ -23,17 +23,20 @@ class ImageIndexContainer(ScrollView):
     Store().dispatch('current_index_child', self.current_child[1])
     self.add_widget(self.current_child[0])
 
-  def scroll_direction(self, *args):
+  def scroll_direction(self, obj, e, *args):
     self.scroll_start = self.scroll_y
-    if not self.scroll_start and self.current_child[1] == 'image_index':
+    if e.button != 'scrollup':
+      self.scrolling = False
+    elif not self.scroll_start and self.current_child[1] == 'image_index':
       self.current_child[0].get_images()
     else:
       self.scrolling = True
 
-  def get_pos(self, *args):
-    if self.scroll_start <= self.scroll_y or not self.scrolling:
+  def get_pos(self, obj, e, *args):
+    if self.scroll_start <= self.scroll_y or not self.scrolling\
+      or e.button != 'scrollup':
       self.scrolling = False
-    elif 800 >= self.to_local(*args[1].pos)[1] and\
+    elif 800 >= self.to_local(*e.pos)[1] and\
          self.current_child[1] == 'image_index':
       self.current_child[0].get_images()
     self.scrolling = False

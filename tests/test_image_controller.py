@@ -75,6 +75,16 @@ class TestImageController:
     assert records.sort() ==  ['cat2.jpg', 'cat3.jpg', 'cat4.jpg',
                                'cat1.jpg', 'cat.jpg'].sort()
 
+  def test_existance_check(self):
+    self._reset_table()
+    self._temp_img(lambda *args: os.remove(f"{IMG_PATH}temp.jpg"),
+                   lambda : self.img.existance_check())
+    assert self.db.count('Image') == 0
+
+    self._temp_img(lambda *args : 5,
+                   lambda : self.img.existance_check())
+    assert self.db.count('Image') == 1
+
   def _reset_table(self):
     self._remove_thumbnails()
     self.db.connection.execute("DROP TABLE Image")
@@ -116,3 +126,5 @@ class TestImageController:
     results = [test() for test in tests]
     self._remove_thumbnails()
     return results
+
+

@@ -4,9 +4,10 @@ from PIL import Image
 from .database_add import RecordAdd
 from .filesearch import get_files
 from .database_controller import DatabaseController
-from os.path import isdir, isfile
+from os.path import isdir, isfile, exists
 from pathlib import Path
 import random, string
+
 
 class ImageController():
   def __init__(self, db=None, test=False):
@@ -71,6 +72,34 @@ class ImageController():
   def get_thumbnail(self, image_id):
     return f"{self.thumbnails_path}{image_id}.png"
 
+  def rename(self, path, new_name, on_disk=True, in_db=True):
+    img_data = self.db_controller.find_by('Image', ('path', path,))
+    img_path = ['path', path]
+
+    if on_disk:
+      new_path = \
+                f"{os.path.split(path)[0]}/{new_name}.{img_data['image_type']}"
+
+      if os.path.exists(new_path):
+        return img_path
+
+      img_path[1] = new_path
+      os.rename(path, img_path[1])
+      self.db_controller.update('Image', img_data['id'], (img_path,))
+
+    if in_db:
+      self.db_controller.update('Image', img_data['id'], (('name', new_name,),))
+
+    return tuple(img_path)
+
+  def existance_check(self):
+    for image in self.db_controller.find_many('Image',
+                                  self.db_controller.get_first('Image')['id'],
+                                  self.db_controller.get_last('Image')['id']):
+      path = image['path']
+      if not exists(path):
+        self.remove(path, True)
+
   def _create_thumbnail(self, path, image_id):
     with Image.open(path) as img:
       img.thumbnail((250, 125,))
@@ -107,26 +136,5 @@ class ImageController():
       return img_hash
     return os.path.splitext(os.path.basename(path))[0]
 
-  def rename(self, path, new_name, on_disk=True, in_db=True):
-    img_data = self.db_controller.find_by('Image', ('path', path,))
-    img_path = ['path', path]
-
-    if on_disk:
-      new_path = \
-                f"{os.path.split(path)[0]}/{new_name}.{img_data['image_type']}"
-
-      if os.path.exists(new_path):
-        return img_path
-
-      img_path[1] = new_path
-      os.rename(path, img_path[1])
-      self.db_controller.update('Image', img_data['id'], (img_path,))
-
-    if in_db:
-      self.db_controller.update('Image', img_data['id'], (('name', new_name,),))
-
-    return tuple(img_path)
-
   def _random_string(self, length):
    return ''.join(random.choice(string.ascii_lowercase) for i in range(length))
-

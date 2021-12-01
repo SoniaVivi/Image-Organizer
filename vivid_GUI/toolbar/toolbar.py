@@ -15,7 +15,6 @@ class Toolbar(BoxLayout):
     self.current_index_child = Store().subscribe(self,
                                                  'current_index_child',
                                                  'current_index_child')
-    self.on_add = Store().subscribe(self, 'update_sort', 'on_add')
     self.set_child = Store().subscribe(self, 'set_index', 'set_child')
     file_button = ToolbarButton(text="Add Images")
     tag_list_button = ToolbarButton(text="Tag List")
@@ -39,7 +38,7 @@ class Toolbar(BoxLayout):
     self.add_widget(Label(text='Tags', size_hint_max=(40, 20)))
     self.add_widget(self.folder_checkbox)
     self.add_widget(Label(text='Folder', size_hint_max=(40, 20)))
-    self.modal = ToolbarModal(on_add=self.on_add)
+    self.modal = ToolbarModal()
     Store().dispatch('searchbar', toolbar_search)
 
   def on_search(self, instance, *args):

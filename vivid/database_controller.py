@@ -8,7 +8,8 @@ class DatabaseController():
       self.connection = self._setup_database(test)
     else:
       self.connection = sqlite3.connect('imagedb.db')
-      self.image_table_exists()
+      for table in ['Image', 'Tag', 'ImageTag']:
+        self._table_exists(table)
 
   def create(self, table, attributes):
     sql = '''INSERT INTO %s(%s)
@@ -44,7 +45,6 @@ class DatabaseController():
         sql += f"{key} = '{value}' AND "
       sql = sql[0:-5]
 
-    columns = self.get_columns(table)
     records = None
 
     if fetchall:
@@ -54,22 +54,15 @@ class DatabaseController():
 
     if records:
       if not fetchall:
-        return dict(zip(columns, records))
+        return self._to_record(table, records)
       else:
-        return [dict(zip(columns, record)) for record in records]
+        return [self._to_record(table, record) for record in records]
     return records
 
   def find_many(self, table, start, stop, asc=True):
-    max_id = self.get_last(table)['id']
-    min_id = self.get_first(table)['id']
-    step = 1 if asc else -1
-    results = []
-    for n in range(start, stop + 1, step):
-      if n <= max_id and n >= min_id:
-        result = self.find_by(table, ['id', n])
-        if result is not None:
-          results.append(result)
-    return results
+    sql = f"SELECT * FROM {table} WHERE id BETWEEN {start} AND {stop}"
+    results = self.connection.execute(sql).fetchall()
+    return [self._to_record(table, result) for result in results if result]
 
   def search(self, table, attributes):
     sql = f"SELECT id FROM {table} WHERE "
@@ -115,15 +108,17 @@ class DatabaseController():
     result = self.connection.execute(sql, (attribute[1],)).fetchall()
     return True if len(result) <= 1 else False
 
-  def image_table_exists(self):
-    exists = self.connection.execute('''SELECT count(name)
-                                        FROM sqlite_master
-                                        WHERE type='table'
-                                        AND name='Image' ''').fetchone()[0]
+  def _table_exists(self, table_name):
+    exists = self.connection.execute(f"SELECT count(name)\
+                                        FROM sqlite_master\
+                                        WHERE type='table'\
+                                        AND name='{table_name}' ").fetchone()[0]
     if exists == 0:
-      print('Setting up database')
-      self._setup_database(False)
-      print('Database setup complete')
+      print(f"Creating table {table_name}")
+      self._setup_database(False, [table_name])
+
+  def _to_record(self, table, record_data):
+    return dict(zip(self.get_columns(table), record_data))
 
   def _get_limit(self, table, asc=True):
     order_by = 'DESC' if asc else 'ASC'
@@ -138,12 +133,20 @@ class DatabaseController():
       record_data[0] = placholder_id
     return dict(zip(columns, record_data))
 
-  def _setup_database(self, test):
+  def _setup_database(self, test, tables=['Image', 'Tag', 'ImageTag']):
     conn = sqlite3.connect('imagedb.db') if not test else sqlite3.connect(':memory:')
-    conn.execute('''CREATE TABLE Image (id integer primary key, name text,
-                          path text, hash text, image_type text)''')
-    conn.execute('''CREATE TABLE Tag (id integer primary key, name text)''')
-    conn.execute('''CREATE TABLE ImageTag (id integer primary key,
-                          tag_id integer, image_id int)''')
+    table_sql = {
+                  'Image':'''CREATE TABLE Image
+                    (id integer primary key,
+                     name text, path text,
+                     hash text,
+                     image_type text)''',
+                  'Tag':'''CREATE TABLE Tag
+                    (id integer primary key, name text)''',
+                  'ImageTag':'''CREATE TABLE ImageTag
+                    (id integer primary key, tag_id integer, image_id int)'''
+                }
+    for table in tables:
+      conn.execute(table_sql[table])
     conn.commit()
     return conn if test == True else None

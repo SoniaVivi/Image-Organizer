@@ -45,7 +45,6 @@ class ImageController():
     self._create_thumbnail(path, record_id)
     return self
 
-
   def add_directory(self, path, toplevel_only=True, **kwargs):
     for file in get_files(path, toplevel_only):
       self.add_image(file.path, **kwargs)

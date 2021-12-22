@@ -10,6 +10,7 @@ class TestTagController:
 
   def test_create(self):
     self.img.add_image(f"{IMG_PATH}cat1.jpg")
+    self.img.add_image(f"{IMG_PATH}cat2.jpg")
     self.tag._create('Cat')
     self.tag._create('♡Meow♡')
 
@@ -57,3 +58,9 @@ class TestTagController:
 
     assert self.tag.find(('♡meow♡', 'nyaa', 'kitty')) ==\
                                           (self.db.find_by('Image', {'id': 2}),)
+    self.tag.tag(3, "meowb")
+    self.tag.tag(3, "nyaa")
+    self.tag.tag(3, "kitty")
+
+    assert self.tag.find(('nyaa', 'kitty', '-meowb')) == (self.db.find_by('Image', {'id': 2}),)
+

@@ -16,7 +16,7 @@ class ImageIndex(GridLayout, SelectBehavior):
   db_controller = DatabaseController()
   tag_controller = TagController()
   config = Config()
-  find_many = db_controller.find_many
+  between = db_controller.between
   find_by = db_controller.find_by
   remove = img_controller.remove
   get_last = db_controller.get_last
@@ -81,7 +81,7 @@ class ImageIndex(GridLayout, SelectBehavior):
     last_id = next_id - 1 if self.sort == 'ASC' else next_id
     if self.sort == 'DESC':
       quantity = quantity * -1
-    query_result = self.find_many('Image',
+    query_result = self.between('Image',
                                   next_id,
                                   next_id + quantity,
                                   self.sort == 'ASC')

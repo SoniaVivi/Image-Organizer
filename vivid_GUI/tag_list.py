@@ -31,7 +31,7 @@ class TagList(GridLayout, SelectBehavior):
       self.set_dividers(width / self.cols)
 
   def display(self):
-    tags = self.db.find_many('Tag',
+    tags = self.db.between('Tag',
                               self.db.get_first('Tag')['id'],
                               self.db.get_last('Tag')['id'] + 1,
                             )

@@ -4,6 +4,7 @@ from collections import Counter
 class TagController:
   def __init__(self, db=None, test=False):
     self.db = db if db else DatabaseController(test)
+    self.image_table_columns = self.db.get_columns('Image')
 
   def _create(self, tag_name):
     if not self.db.exists('Tag', ('name', tag_name.lower())):
@@ -64,6 +65,7 @@ class TagController:
   def find(self, tags):
     excluded_tags = []
     search_tags = []
+    exclude_sql = ""
 
     for tag in filter(lambda tag: type(tag) == str and len(tag) > 1, tags):
       if tag[0] == '-':
@@ -71,30 +73,28 @@ class TagController:
       else:
         search_tags.append(tag)
 
-    images = [self.all(tag) for tag in search_tags]
-    images = [x for _ in images for x in _ if x is not None]
-    common_images = []
-    most_common = Counter([x['id'] for x in images]).most_common()
+    if len(excluded_tags):
+      exclude_sql = self.db.sql_from_lists('Tag.name', excluded_tags, 'OR')
+      front = "AND I.id"  if len(search_tags) else "WHERE I.id"
+      exclude_sql = f"{front} NOT IN (SELECT ImageTag.image_id\
+                                      FROM ImageTag\
+                                        JOIN Tag ON Tag.id=ImageTag.tag_id\
+                                      WHERE {exclude_sql})"
 
-    for (img_id, img_frequency) in most_common:
-      if img_frequency < len(search_tags):
-        break
+    include_sql = " WHERE " if len(search_tags) else ""
+    if len(search_tags):
+      include_sql += self.db.sql_from_lists('T.name', search_tags, "OR")
 
-      for image in images:
-        if image['id'] == img_id:
-          has_excluded = False
+    sql = f"SELECT I.{',I.'.join(self.image_table_columns)}\
+            FROM Tag as T\
+              JOIN ImageTag as IT ON IT.tag_id=T.id\
+              JOIN Image as I ON IT.image_id=I.id\
+            {include_sql}\
+            {exclude_sql}\
+            GROUP BY I.id\
+            HAVING COUNT(*)>={len(search_tags)}"
 
-          for excluded_tag in excluded_tags:
-            exclude_tag = self.db.find_by('Tag', {'name': excluded_tag})
-            if exclude_tag and\
-                self.db.find_by('ImageTag', {'tag_id': exclude_tag['id'],
-                                            'image_id': image['id']}):
-              has_excluded = True
-              break
-
-          if has_excluded:
-            continue
-
-          common_images.append(image)
-          break
-    return tuple(common_images)
+    images = self.db.execute(sql).fetchall()
+    return tuple(map(
+      lambda image: dict(zip(self.image_table_columns, image)),
+      images))

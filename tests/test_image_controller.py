@@ -68,7 +68,7 @@ class TestImageController:
 
     self.img.add_directory(IMG_PATH, False)
     assert self.db.count('Image') == 5
-    records = [record['name'] for record in self.db.find_many('Image', 1, 5)]
+    records = [record['name'] for record in self.db.between('Image', 1, 5)]
 
     self._reset_table()
 

@@ -25,12 +25,24 @@ class TestDatabaseController:
     assert self.db.get_columns('Image') ==\
                                    ['id', 'name', 'path', 'hash', 'image_type']
 
-  def test_find_many(self):
-    records = self.db.find_many('Image', 1, 2)
+  def test_between(self):
+    records = self.db.between('Image', 1, 2)
     assert len(records) == 2
     assert records ==\
           [{'id': 1, 'name': 'f', 'path': 'f', 'hash': None, 'image_type': None},
            {'id': 2, 'name': 'f', 'path': 'f', 'hash': 'f', 'image_type': 'f'}]
+
+  def test_find_many(self):
+    self.db.create('Image', {'name': 'f'})
+    assert len(self.db.find_many('Image', {'name': 'f'})) == 3
+    assert len(self.db.find_many('Image', {'image_type': 'f', 'path': 'f'}))\
+            == 2
+    assert len(self.db.find_many('Image',
+                                 {'name': 'f', 'hash': 'f'},
+                                  inclusive=False)) == 1
+    assert len(self.db.find_many('Image',
+                                 {'name': 'f'}, exclude={'hash': 'f'})) == 2
+    assert len(self.db.find_many('Image', exclude={'hash': 'f'})) == 2
 
   def test_delete(self):
     row_count = self.db.count('Image')

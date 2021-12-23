@@ -16,23 +16,23 @@ class DatabaseController():
              VALUES (%s)''' % (table, ','.join(attributes.keys()),
                               ('?,' * len(attributes.keys()))[0:-1])
     try:
-      cur = self.connection.execute(sql, tuple(attributes.values()))
+      cur = self.execute(sql, tuple(attributes.values()))
       self.connection.commit()
-      return self.connection.execute('SELECT max(id) FROM %s' % (table,)).fetchone()[0]
+      return self.execute('SELECT max(id) FROM %s' % (table,)).fetchone()[0]
     except Exception as e:
       print(e)
 
   def update(self, table, id, new_values):
     for attribute in new_values:
-      self.connection.execute('''UPDATE %s SET %s = ? WHERE id = ?''' %
+      self.execute('''UPDATE %s SET %s = ? WHERE id = ?''' %
                        (table, attribute[0]), (attribute[1], str(id),))
 
     self.connection.commit()
 
   def delete(self, table, attribute_pair):
-    self.connection.execute('''DELETE FROM %s WHERE %s=?''' %
-                                                    (table, attribute_pair[0]),
-                                                    (attribute_pair[1],))
+    self.execute('''DELETE FROM %s WHERE %s=?''' %
+                                                  (table, attribute_pair[0]),
+                                                  (attribute_pair[1],))
     self.connection.commit()
 
   def find_by(self, table, attributes, fetchall=False):
@@ -48,9 +48,9 @@ class DatabaseController():
     records = None
 
     if fetchall:
-      records = self.connection.execute(sql).fetchall()
+      records = self.execute(sql).fetchall()
     else:
-      records = self.connection.execute(sql).fetchone()
+      records = self.execute(sql).fetchone()
 
     if records:
       if not fetchall:
@@ -59,9 +59,32 @@ class DatabaseController():
         return [self._to_record(table, record) for record in records]
     return records
 
-  def find_many(self, table, start, stop, asc=True):
-    sql = f"SELECT * FROM {table} WHERE id BETWEEN {start} AND {stop}"
-    results = self.connection.execute(sql).fetchall()
+  def find_many(self, table, attributes={}, **kwargs):
+    sql = f"SELECT * FROM {table} AS a WHERE "
+    exclude_sql = f"SELECT id FROM {table} WHERE "
+    inclusive = kwargs.get('inclusive', True)
+    exclude_attributes = kwargs.get('exclude', {})
+
+    for (name, val) in attributes.items():
+      sql += f"{name}='{val}' {'OR' if inclusive else 'AND'} "
+    if len(attributes):
+      sql = sql[:-3 if inclusive else -4]
+
+    for (name, val) in exclude_attributes.items():
+      exclude_sql += f"{name}='{val}' OR "
+    if len(exclude_attributes):
+      sql = f"{sql}{'AND' if len(attributes) else ''}\
+              a.id NOT IN ({exclude_sql[:-4]})"
+
+    return self.execute(sql).fetchall()
+
+  def between(self, table, start, stop, *args):
+    asc = start < stop
+    lower = start if asc else stop
+    upper = stop if asc else start
+    order = ' ORDER BY id ASC' if asc else ' ORDER BY id DESC'
+    sql = f"SELECT * FROM {table} WHERE id BETWEEN {lower} AND {upper}"
+    results = self.execute(sql + order).fetchall()
     return [self._to_record(table, result) for result in results if result]
 
   def search(self, table, attributes):
@@ -70,15 +93,16 @@ class DatabaseController():
       sql += f"{column} LIKE '%{value}%' AND "
 
     sql = sql[0:-5]
-    results = self.connection.execute(sql).fetchall()
+    results = self.execute(sql).fetchall()
     return [self.find_by('Image', ('id', result[0])) for result in results]
 
   def next_id(self, table, value, asc=True):
+    placholder_id = -1 if asc else 2 ** 63
     operator = '>' if asc else '<'
     order_by = 'ASC' if asc else 'DESC'
     sql = '''SELECT id FROM %s WHERE id %s %s ORDER BY id %s'''
-    return self.connection.execute(sql %
-                              (table, operator, value, order_by,)).fetchone()[0]
+    record = self.execute(sql % (table, operator, value, order_by,)).fetchone()
+    return record[0] if record else placholder_id
 
   def get_first(self, table):
     return self._get_limit(table, False)
@@ -87,32 +111,34 @@ class DatabaseController():
     return self._get_limit(table)
 
   def get_columns(self, table):
-    cols = self.connection.execute('''PRAGMA table_info(%s)''' % (table,))
-    cols = cols.fetchall()
+    cols = self.execute(f"PRAGMA table_info({table})").fetchall()
     return None if len(cols) == 0 else [row[1] for row in cols]
 
   def count(self, table):
-    return self.connection.execute('''SELECT count(*) FROM %s''' % table).fetchone()[0]
+    return self.execute(f"SELECT count(*) FROM {table}").fetchone()[0]
 
   def exists(self, table, attribute=None):
     if not attribute:
-      result = self.connection.execute('''SELECT name
-                                          FROM sqlite_master
-                                          WHERE type='table'
-                                          AND name='%s' ''' % (table,)).fetchone()
+      result = self.execute('''SELECT name
+                               FROM sqlite_master
+                               WHERE type='table'
+                               AND name='%s' ''' % (table,)).fetchone()
       return True if result != None else False
     return True if self.find_by(table, attribute) else False
 
   def unique(self, table, attribute):
     sql = "SELECT id FROM {} WHERE {}=?".format(table, attribute[0])
-    result = self.connection.execute(sql, (attribute[1],)).fetchall()
+    result = self.execute(sql, (attribute[1],)).fetchall()
     return True if len(result) <= 1 else False
 
+  def execute(self, sql_string, *args):
+    return self.connection.execute(sql_string, *args)
+
   def _table_exists(self, table_name):
-    exists = self.connection.execute(f"SELECT count(name)\
-                                        FROM sqlite_master\
-                                        WHERE type='table'\
-                                        AND name='{table_name}' ").fetchone()[0]
+    exists = self.execute(f"SELECT count(name)\
+                            FROM sqlite_master\
+                            WHERE type='table'\
+                            AND name='{table_name}' ").fetchone()[0]
     if exists == 0:
       print(f"Creating table {table_name}")
       self._setup_database(False, [table_name])
@@ -125,8 +151,7 @@ class DatabaseController():
     placholder_id = -1 if asc else 2 ** 63
 
     columns = self.get_columns(table)
-    record_data = self.connection.execute(
-                                  "SELECT * FROM %s ORDER BY id %s LIMIT 1" %
+    record_data = self.execute("SELECT * FROM %s ORDER BY id %s LIMIT 1" %
                                                   (table, order_by)).fetchone()
     if not record_data:
       record_data = [None for _ in range(0, len(columns))]

@@ -65,17 +65,16 @@ class DatabaseController():
     inclusive = kwargs.get('inclusive', True)
     exclude_attributes = kwargs.get('exclude', {})
 
-    for (name, val) in attributes.items():
-      sql += f"{name}='{val}' {'OR' if inclusive else 'AND'} "
-    if len(attributes):
-      sql = sql[:-3 if inclusive else -4]
+    sql += self.sql_from_lists(list(attributes.keys()),
+                                    list(attributes.values()),
+                                    'OR' if inclusive else 'AND')
 
-    for (name, val) in exclude_attributes.items():
-      exclude_sql += f"{name}='{val}' OR "
     if len(exclude_attributes):
-      sql = f"{sql}{'AND' if len(attributes) else ''}\
-              a.id NOT IN ({exclude_sql[:-4]})"
-
+      exclude_sql += self.sql_from_lists(list(exclude_attributes.keys()),
+                                    list(exclude_attributes.values()),
+                                    'OR')
+      sql += f"{'AND' if len(attributes) else ''}\
+              a.id NOT IN ({exclude_sql})".replace('  ', " ")
     return self.execute(sql).fetchall()
 
   def between(self, table, start, stop, *args):
@@ -133,6 +132,14 @@ class DatabaseController():
 
   def execute(self, sql_string, *args):
     return self.connection.execute(sql_string, *args)
+
+  def sql_from_lists(self, names, values, joiner):
+    sql = ""
+    names_is_list = type(names) is list
+    for i, value in enumerate(values):
+      sql += names[i] if names_is_list else names
+      sql += f"='{value}' {joiner} "
+    return sql[:-(len(joiner) + 2)]
 
   def _table_exists(self, table_name):
     exists = self.execute(f"SELECT count(name)\

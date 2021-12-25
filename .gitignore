@@ -16,3 +16,4 @@ config
 /dist
 /main.spec
 /build
+/vivid/imagedb.db

@@ -15,8 +15,12 @@ class TestCLI():
     assert columns == self.db.get_columns('Image')
 
   def test_run(self):
-    assert self.cli.run('db.create("Image", {"name": "f"}') ==\
+    assert self.cli.run('db.create("Image", {"name": "f"})') ==\
            self.db.create("Image", {"name": "f"})
-    assert self.cli.run(f"img.add('Image', {IMG_PATH}cat1.jpg)") ==\
-           self.img.add("Image", IMG_PATH+'cat1.jpg')
+
+    self.cli.run(f"img.add('{IMG_PATH+'cat1.jpg'}')")
+    self.img.add(IMG_PATH+'cat1.jpg')
+    assert  self.cli.run('db.find_by("Image", {"id": 2})') ==\
+            self.db.find_by("Image", {"id": 2})
+
     assert self.cli.run(f"tag.tag(1, 'cat')") == self.tag.tag(1, 'cat')

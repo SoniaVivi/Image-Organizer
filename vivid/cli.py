@@ -23,6 +23,23 @@ class CLI(cmd.Cmd):
     exec(code)
     return CLI.last_result
 
+  def display(self, table, **kwargs):
+    columns = CLI.controllers['db'].get_columns('Image')
+    begin_at = kwargs.get('begin_at', 1)
+    end_at = kwargs.get('end_at', 11)
+    records = CLI.controllers['db'].between(table, begin_at, end_at)
+    display_string = ''
+
+    for column in columns:
+      display_string += self._format_column(column)
+
+    for record in records:
+      display_string += "\n"
+      for column in columns:
+        display_string += self._format_column(str(record[column]))
+
+    return display_string
+
   def _set_controllers(self, test=False):
     if not CLI.controllers['db']:
       CLI.controllers['db'] = DatabaseController(test=test)
@@ -31,6 +48,14 @@ class CLI(cmd.Cmd):
 
   def _save_result(self, result):
     CLI.last_result = result
+
+  def _format_column(self, data):
+    max_length = 23
+    while len(data) < max_length:
+      data += " "
+    if len(data) > max_length:
+      data = data[:max_length - 3] + '...'
+    return data + ' | '
 
 if __name__ == '__main__':
   os.chdir(os.path.dirname(os.path.abspath(__file__)))

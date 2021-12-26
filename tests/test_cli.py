@@ -24,3 +24,12 @@ class TestCLI():
             self.db.find_by("Image", {"id": 2})
 
     assert self.cli.run(f"tag.tag(1, 'cat')") == self.tag.tag(1, 'cat')
+
+  def test_display(self):
+    result = self.cli.display('Image')
+
+    for column in self.db.get_columns('Image'):
+      assert str(column)[:20] in result
+
+    for value in self.db.find_by('Image', {'id': 2}).values():
+      assert str(value)[:20] in result

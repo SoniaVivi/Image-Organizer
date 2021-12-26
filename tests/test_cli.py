@@ -5,7 +5,7 @@ from vivid.image_controller import ImageController as ic
 from vivid.tag_controller import TagController as tc
 
 class TestCLI():
-  cli = CLI()
+  cli = CLI(test=True)
   db = dc(test=True)
   img = ic(db=db)
   tag = tc(db=db)

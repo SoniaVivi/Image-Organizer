@@ -11,7 +11,7 @@ class CLI(cmd.Cmd):
   last_result = None
 
   def __init__(self, *args, **kwargs):
-    super().__init__(*args, **kwargs)
+    super().__init__()
     self._set_controllers(test=kwargs.get('test', False))
 
   def do_execute(self, arg):

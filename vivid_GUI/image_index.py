@@ -124,8 +124,7 @@ class ImageIndex(GridLayout, SelectBehavior):
 
   def clear(self):
     self.clear_widgets()
-    if not self.sort:
-      self.next_id = self._get_initial_id()
+    self.next_id = self._get_initial_id()
     self.fill_space()
 
   def update_sort(self, *args):

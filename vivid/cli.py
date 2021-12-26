@@ -5,13 +5,39 @@ from .tag_controller import TagController
 import os
 
 class CLI(cmd.Cmd):
+  intro = 'Type help or ? to list commands.\n'
   prompt = '(vivid) '
   controllers = {'db': None, 'img': None, 'tag': None}
   last_result = None
 
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
-    self._set_controllers(test=True)
+    self._set_controllers(test=kwargs.get('test', False))
+
+  def do_execute(self, arg):
+    try:
+      print(self.execute(arg))
+    except Exception as e:
+      print(e)
+
+  def do_display(self, arg):
+    try:
+      args = arg.split(" ")
+      if len(args) == 3:
+        print(self.display(args[0], begin_at=args[1], end_at=args[2]))
+      else:
+        print(self.display(arg))
+    except Exception as e:
+      print(e)
+
+  def do_run(self, arg):
+    try:
+      print(self.run(arg))
+    except Exception as e:
+      print(e)
+
+  def do_working_directory(self, *args):
+    print(os.getcwd())
 
   def execute(self, sql, *args):
     return CLI.controllers['db'].execute(sql, *args)

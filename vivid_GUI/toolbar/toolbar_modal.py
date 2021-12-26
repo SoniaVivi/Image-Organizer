@@ -49,8 +49,8 @@ class ToolbarModal(ModalView):
     else:
       self.img_controller.add(self.file_chooser.path)
     self.file_chooser.selection = []
-    self.dismiss()
     self.on_add()
+    self.dismiss()
 
   def clear_selection(self, *args):
     self.file_chooser.selection = []

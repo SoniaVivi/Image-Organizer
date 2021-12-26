@@ -15,12 +15,21 @@ class CLI(cmd.Cmd):
     self._set_controllers(test=kwargs.get('test', False))
 
   def do_execute(self, arg):
+    """Execute argument as sql."""
     try:
       print(self.execute(arg))
     except Exception as e:
       print(e)
 
   def do_display(self, arg):
+    """
+    Return records in table.
+
+    Args:
+        table (string): Name of table to retrieve records from. Required.
+        min (integer): Minimum id of record to return. Defaults to 1.
+        max (integer): Maximum id of record to return. Defaults to 11.
+    """
     try:
       args = arg.split(" ")
       if len(args) == 3:
@@ -31,12 +40,19 @@ class CLI(cmd.Cmd):
       print(e)
 
   def do_run(self, arg):
+    """
+    Execute a function of a controller.
+
+    Args:
+        arg (string): Must be in the following format: [db/img/tag].[function name]([arguments to be passed])
+    """
     try:
       print(self.run(arg))
     except Exception as e:
       print(e)
 
   def do_working_directory(self, *args):
+    """Print working directory"""
     print(os.getcwd())
 
   def execute(self, sql, *args):

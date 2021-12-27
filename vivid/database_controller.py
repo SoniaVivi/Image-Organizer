@@ -1,6 +1,8 @@
 import sqlite3
 
 class DatabaseController():
+  DEFAULT_TABLES = ['Image', 'Tag', 'ImageTag', 'ImageBlacklist']
+
   def __init__(self, test=False, conn=None):
     if conn:
       self.connection = conn
@@ -8,7 +10,7 @@ class DatabaseController():
       self.connection = self._setup_database(test)
     else:
       self.connection = sqlite3.connect('imagedb.db')
-      for table in ['Image', 'Tag', 'ImageTag']:
+      for table in DatabaseController.DEFAULT_TABLES:
         self._table_exists(table)
 
   def create(self, table, attributes):
@@ -172,7 +174,8 @@ class DatabaseController():
       record_data[0] = placholder_id
     return dict(zip(columns, record_data))
 
-  def _setup_database(self, test, tables=['Image', 'Tag', 'ImageTag']):
+  def _setup_database(self, test, **kwargs):
+    tables = kwargs.get('tables', DatabaseController.DEFAULT_TABLES)
     conn = sqlite3.connect('imagedb.db') if not test else sqlite3.connect(':memory:')
     table_sql = {
                   'Image':'''CREATE TABLE Image
@@ -183,7 +186,11 @@ class DatabaseController():
                   'Tag':'''CREATE TABLE Tag
                     (id integer primary key, name text)''',
                   'ImageTag':'''CREATE TABLE ImageTag
-                    (id integer primary key, tag_id integer, image_id int)'''
+                    (id integer primary key, tag_id integer, image_id int)''',
+                  'ImageBlacklist':'''CREATE TABLE ImageBlacklist
+                    (id integer primary key,
+                     path string,
+                     blacklist_type string)'''
                 }
     for table in tables:
       conn.execute(table_sql[table])

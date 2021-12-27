@@ -2,12 +2,13 @@ from vivid import database_controller as vivid
 import sqlite3
 
 class TestDatabaseController:
-  db = vivid.DatabaseController(True)
+  db = vivid.DatabaseController(test=True)
 
   def test_setup(self):
     assert self.db.exists('Image') == True
     assert self.db.exists('Tag') == True
     assert self.db.exists('ImageTag') == True
+    assert self.db.exists('ImageBlacklist') == True
 
   def test_create(self):
     records = [

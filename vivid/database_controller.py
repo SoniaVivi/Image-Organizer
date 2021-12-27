@@ -54,9 +54,9 @@ class DatabaseController():
 
     if records:
       if not fetchall:
-        return self._to_record(table, records)
+        return self.to_record(table, records)
       else:
-        return [self._to_record(table, record) for record in records]
+        return [self.to_record(table, record) for record in records]
     return records
 
   def find_many(self, table, attributes={}, **kwargs):
@@ -84,7 +84,7 @@ class DatabaseController():
     order = ' ORDER BY id ASC' if asc else ' ORDER BY id DESC'
     sql = f"SELECT * FROM {table} WHERE id BETWEEN {lower} AND {upper}"
     results = self.execute(sql + order).fetchall()
-    return [self._to_record(table, result) for result in results if result]
+    return [self.to_record(table, result) for result in results if result]
 
   def search(self, table, attributes):
     sql = f"SELECT id FROM {table} WHERE "
@@ -141,6 +141,16 @@ class DatabaseController():
       sql += f"='{value}' {joiner} "
     return sql[:-(len(joiner) + 2)]
 
+  def get_id(self, table, attributes):
+    attributes_sql = self.sql_from_lists(list(attributes.keys()),
+                                         list(attributes.values()),
+                                         'AND')
+    sql = f"SELECT id FROM {table} WHERE {attributes_sql}"
+    return [*self.execute(sql).fetchone(), None][0]
+
+  def to_record(self, table, record_data):
+    return dict(zip(self.get_columns(table), record_data))
+
   def _table_exists(self, table_name):
     exists = self.execute(f"SELECT count(name)\
                             FROM sqlite_master\
@@ -149,9 +159,6 @@ class DatabaseController():
     if exists == 0:
       print(f"Creating table {table_name}")
       self._setup_database(False, [table_name])
-
-  def _to_record(self, table, record_data):
-    return dict(zip(self.get_columns(table), record_data))
 
   def _get_limit(self, table, asc=True):
     order_by = 'DESC' if asc else 'ASC'

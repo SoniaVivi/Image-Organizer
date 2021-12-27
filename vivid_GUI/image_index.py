@@ -201,7 +201,7 @@ class ImageIndex(GridLayout, SelectBehavior):
 
   def remove_image(self, keep_on_disk=True, *args):
     for selected in self.selected:
-      self.remove(selected().data['path'], keep_on_disk)
+      self.remove(selected().data['path'], db_only=keep_on_disk)
       self.remove_widget(selected())
     self.selected = []
     self.fill_space()

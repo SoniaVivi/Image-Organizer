@@ -160,7 +160,7 @@ class DatabaseController():
                             AND name='{table_name}' ").fetchone()[0]
     if exists == 0:
       print(f"Creating table {table_name}")
-      self._setup_database(False, [table_name])
+      self._setup_database(False, tables=[table_name])
 
   def _get_limit(self, table, asc=True):
     order_by = 'DESC' if asc else 'ASC'
@@ -189,8 +189,8 @@ class DatabaseController():
                     (id integer primary key, tag_id integer, image_id int)''',
                   'ImageBlacklist':'''CREATE TABLE ImageBlacklist
                     (id integer primary key,
-                     path string,
-                     blacklist_type string)'''
+                     textable string,
+                     textable_type string)'''
                 }
     for table in tables:
       conn.execute(table_sql[table])

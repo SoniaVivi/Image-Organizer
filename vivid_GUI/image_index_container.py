@@ -14,6 +14,9 @@ class ImageIndexContainer(ScrollView):
     Store.dispatch('set_index', self.set_child)
 
   def set_child(self, name='image_index'):
+    if hasattr(self, 'current_child'):
+      self.current_child[0].close_context_menu()
+
     self.clear_widgets()
     if name == 'image_index':
       self.current_child = (ImageIndex(), 'image_index')

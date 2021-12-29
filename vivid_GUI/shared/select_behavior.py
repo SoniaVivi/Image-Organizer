@@ -3,6 +3,7 @@ import weakref
 
 class SelectBehavior():
   def __init__(self, **kwargs):
+    super().__init__(**kwargs)
     self.selected = []
     self.pressed_keys = {'shift': False, 'ctrl': False}
     self.keyboard = Window.request_keyboard(lambda *args : None, self)

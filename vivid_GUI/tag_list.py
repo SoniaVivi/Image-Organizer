@@ -4,12 +4,12 @@ from kivy.uix.label import Label
 from kivy.uix.gridlayout import GridLayout
 from vivid.database_controller import DatabaseController
 from kivy.graphics import Color, Line
+from vivid_GUI.context_menu.context_menu_behavior import ContextMenuBehavior
 from .shared.select_behavior import SelectBehavior
 from .shared.select_child_behavior import SelectChildBehavior
-from .context_menu.context_menu import ContextMenu
 import weakref
 
-class TagList(GridLayout, SelectBehavior):
+class TagList(GridLayout, SelectBehavior, ContextMenuBehavior):
   db = DatabaseController()
 
   def __init__(self, search, **kwargs):
@@ -20,8 +20,7 @@ class TagList(GridLayout, SelectBehavior):
     self.col_color = (64/255, 158/255, 1,)
     self.search = search
     self.display()
-    self.bind(on_touch_down = self.right_click)
-    self.menu = None
+    self.menu_options = [[(("Search Tags", self.search_tags,),)]]
 
   def set_cols(self, obj=None, width=None):
     width = self.width if width is None else width
@@ -75,19 +74,6 @@ class TagList(GridLayout, SelectBehavior):
 
     for i in range((row * self.cols), (row * self.cols) + 1):
         self.children[-i].set_border(row_height)
-
-  def right_click(self, instance, touch):
-    if self.menu:
-      self.menu.close()
-
-    self.is_right_click = touch.button == 'right'
-    if self.is_right_click and len(self.selected):
-      menu_options = [
-                      ("Search Tags", self.search_tags),
-                     ]
-
-      self.menu = ContextMenu(menu_options, pos=touch.pos)
-      self.menu.open()
 
   def search_tags(self):
     self.search([tag().text for tag in self.selected])

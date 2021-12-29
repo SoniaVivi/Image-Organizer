@@ -5,14 +5,14 @@ from vivid.image_controller import ImageController
 from vivid.database_controller import DatabaseController
 from vivid.tag_controller import TagController
 from vivid.config import Config
-from .context_menu.context_menu import ContextMenu
+from vivid_GUI.context_menu.context_menu_behavior import ContextMenuBehavior
 from .thumbnail import Thumbnail
 from .context_menu.add_tag_popup import AddTagPopup
 from .context_menu.remove_tag_popup import RemoveTagPopup
 from .shared.select_behavior import SelectBehavior
 from .store import Store
 
-class ImageIndex(GridLayout, SelectBehavior):
+class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
   img_controller = ImageController()
   db_controller = DatabaseController()
   tag_controller = TagController()
@@ -28,7 +28,6 @@ class ImageIndex(GridLayout, SelectBehavior):
     self.bind(width=self.set_cols)
     self.set_preview = Store.subscribe(self, 'set_preview_image', 'set_preview')
     self.rename_image = Store.subscribe(self, 'rename_image', 'rename_image')
-    self.menu = None
     self.tag_popup = False
     self.scroll_pos = 1.0
     self.sort = self.config.read('image_index', 'sort')
@@ -36,6 +35,33 @@ class ImageIndex(GridLayout, SelectBehavior):
     self.bind(on_touch_down = self.right_click)
     self.set_cols()
     self.fill_space()
+    self.menu_options =  [
+      ([
+        ("Add Tag", self.tag),
+        ("Remove Tag", lambda *args: self.tag(action="remove")),
+        ("Remove", self.remove_image),
+        ("Remove and Blacklist",
+          lambda: (self.blacklist(),
+                  self.remove_image()),),
+        ("Remove and Blacklist Parent Directory",
+          lambda: (self.blacklist('directory'),
+                  self.remove_image())),
+        ("Delete",
+            lambda *args : self.remove_image(keep_on_disk=False)),
+        ("Delete and Blacklist Parent Directory",
+          lambda: (self.blacklist('directory'),
+                  self.remove_image(keep_on_disk=False))),
+       ],
+      ),
+      ([
+        ("Rename", lambda *args: self.rename(on_disk=True)),
+        ("Rename (disk only)",
+          lambda *args: self.rename(False, True)),
+        ("Rename (database only)", self.rename),
+        ],
+        lambda: len(self.selected) == 1
+      )
+    ]
     Store.dispatch("update_sort", self.update_sort)
     Store.dispatch("search_images", self.search_images)
     Store.dispatch("refresh", self.clear)
@@ -143,40 +169,6 @@ class ImageIndex(GridLayout, SelectBehavior):
     if is_left_click:
       self.set_preview(data)
     return is_left_click
-
-  def right_click(self, instance, touch):
-    if self.menu:
-      self.menu.close()
-
-    self.is_right_click = touch.button == 'right'
-    if self.is_right_click and len(self.selected):
-      menu_options = [
-                      ("Add Tag", self.tag),
-                      ("Remove Tag", lambda *args: self.tag(action="remove")),
-                      ("Remove", self.remove_image),
-                      ("Remove and Blacklist",
-                       lambda: (self.blacklist(),
-                                self.remove_image()),),
-                      ("Remove and Blacklist Parent Directory",
-                       lambda: (self.blacklist('directory'),
-                                self.remove_image())),
-                      ("Delete",
-                          lambda *args : self.remove_image(keep_on_disk=False)),
-                      ("Delete and Blacklist Parent Directory",
-                       lambda: (self.blacklist('directory'),
-                                self.remove_image(keep_on_disk=False))),
-                     ]
-
-      if len(self.selected) == 1:
-        menu_options += [
-                         ("Rename", lambda *args: self.rename(on_disk=True)),
-                         ("Rename (disk only)",
-                           lambda *args: self.rename(False, True)),
-                         ("Rename (database only)", self.rename)
-                        ]
-
-      self.menu = ContextMenu(menu_options, pos=touch.pos)
-      self.menu.open()
 
   def blacklist(self, blacklist_type='image'):
     textable_type = 'path' if blacklist_type == 'image' else 'directory'

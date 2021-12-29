@@ -26,8 +26,8 @@ class ImageIndex(GridLayout, SelectBehavior):
   def __init__(self, **kwargs):
     super(ImageIndex, self).__init__(**kwargs)
     self.bind(width=self.set_cols)
-    self.set_preview = Store().subscribe(self, 'set_preview_image', 'set_preview')
-    self.rename_image = Store().subscribe(self, 'rename_image', 'rename_image')
+    self.set_preview = Store.subscribe(self, 'set_preview_image', 'set_preview')
+    self.rename_image = Store.subscribe(self, 'rename_image', 'rename_image')
     self.menu = None
     self.tag_popup = False
     self.scroll_pos = 1.0
@@ -36,9 +36,9 @@ class ImageIndex(GridLayout, SelectBehavior):
     self.bind(on_touch_down = self.right_click)
     self.set_cols()
     self.fill_space()
-    Store().dispatch("update_sort", self.update_sort)
-    Store().dispatch("search_images", self.search_images)
-    Store().dispatch("refresh", self.clear)
+    Store.dispatch("update_sort", self.update_sort)
+    Store.dispatch("search_images", self.search_images)
+    Store.dispatch("refresh", self.clear)
 
   def set_cols(self, obj=None, width=Window.width):
     self.cols=int((width / 250))

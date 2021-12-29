@@ -11,7 +11,7 @@ class ImageIndexContainer(ScrollView):
     self.bind(on_scroll_stop=self.get_pos)
     self.always_overscroll = False
     self.overscroll_effect = False
-    Store().dispatch('set_index', self.set_child)
+    Store.dispatch('set_index', self.set_child)
 
   def set_child(self, name='image_index'):
     self.clear_widgets()
@@ -20,7 +20,7 @@ class ImageIndexContainer(ScrollView):
     elif name == 'tag_list':
       self.current_child = (TagList(search=self.search_from_tag_list),
                             'tag_list')
-    Store().dispatch('current_index_child', self.current_child[1])
+    Store.dispatch('current_index_child', self.current_child[1])
     self.add_widget(self.current_child[0])
 
   def scroll_direction(self, obj, e, *args):
@@ -43,5 +43,5 @@ class ImageIndexContainer(ScrollView):
 
   def search_from_tag_list(self, tags=[]):
     self.set_child()
-    Store().select(lambda state: state['search_images'])(" ".join(tags), True)
-    Store().select(lambda state: state['searchbar']).text = " ".join(tags)
+    Store.select(lambda state: state['search_images'])(" ".join(tags), True)
+    Store.select(lambda state: state['searchbar']).text = " ".join(tags)

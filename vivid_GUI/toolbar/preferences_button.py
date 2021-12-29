@@ -12,7 +12,7 @@ class PreferencesButton(ToolbarButton):
   def __init__(self, **kwargs):
     super(PreferencesButton, self).__init__(**kwargs)
     self.text = "Preferences"
-    self.update_sort = Store().subscribe(self, 'update_sort', 'update_sort')
+    self.update_sort = Store.subscribe(self, 'update_sort', 'update_sort')
     self.bind(on_press=self.show_modal)
 
   def show_modal(self, *args):

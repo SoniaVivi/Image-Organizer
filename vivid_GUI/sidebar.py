@@ -27,9 +27,9 @@ class Sidebar(BoxLayout):
     self.id = 'sidebar'
     self.update_children()
     self.last_update = datetime.now()
-    Store().dispatch('set_preview_image', self.set_preview)
-    Store().dispatch('rename_image', self.rename_image)
-    Store().dispatch('update_thumbnail', self.update_thumbnail)
+    Store.dispatch('set_preview_image', self.set_preview)
+    Store.dispatch('rename_image', self.rename_image)
+    Store.dispatch('update_thumbnail', self.update_thumbnail)
 
   def empty_data(self):
     return {'name': '', 'path': '', 'hash': '', 'image_type': '', 'tags': ''}
@@ -112,7 +112,7 @@ class EditField(TextInput):
     self.multiline = False
 
   def update_field(self):
-    Store()\
+    Store\
       .select(lambda state : state['update_thumbnail'])({'name': self.text})
 
   def pressed_key(self, *args):

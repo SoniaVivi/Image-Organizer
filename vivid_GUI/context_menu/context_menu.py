@@ -9,7 +9,6 @@ class ContextMenu(FloatLayout):
     self.items = items
     self.pos = self.pos[0], self.pos[1] - self.size[1]
 
-
   def add_children(self):
     x, y = self.window.mouse_pos
 

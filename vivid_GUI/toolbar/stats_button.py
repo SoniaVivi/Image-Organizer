@@ -58,7 +58,7 @@ class StatsButton(ToolbarButton):
 
   def existance_check(self, *args):
     ImageController().existance_check()
-    Store().select(lambda state: state['refresh'])()
+    Store.select(lambda state: state['refresh'])()
     self.show_modal()
 
 class StatsLabel(Label):

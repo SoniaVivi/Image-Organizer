@@ -1,3 +1,4 @@
+from pathlib import PurePath
 from kivy.core.window import Window
 from kivy.uix.gridlayout import GridLayout
 from vivid.image_controller import ImageController
@@ -149,8 +150,17 @@ class ImageIndex(GridLayout, SelectBehavior):
                       ("Add Tag", self.tag),
                       ("Remove Tag", lambda *args: self.tag(action="remove")),
                       ("Remove", self.remove_image),
+                      ("Remove and Blacklist",
+                       lambda: (self.blacklist(),
+                                self.remove_image()),),
+                      ("Remove and Blacklist Parent Directory",
+                       lambda: (self.blacklist('directory'),
+                                self.remove_image())),
                       ("Delete",
-                          lambda *args : self.remove_image(keep_on_disk=False))
+                          lambda *args : self.remove_image(keep_on_disk=False)),
+                      ("Delete and Blacklist Parent Directory",
+                       lambda: (self.blacklist('directory'),
+                                self.remove_image(keep_on_disk=False))),
                      ]
 
       if len(self.selected) == 1:
@@ -163,6 +173,16 @@ class ImageIndex(GridLayout, SelectBehavior):
 
       self.menu = ContextMenu(menu_options, pos=touch.pos)
       self.menu.open()
+
+  def blacklist(self, blacklist_type='image'):
+    textable_type = 'path' if blacklist_type == 'image' else 'directory'
+    for selected in self.selected:
+      path = PurePath(selected().data['path'])
+      if textable_type == 'path':
+        self.img_controller.blacklist_image(str(path), 'path')
+      elif textable_type == 'directory':
+        self.img_controller.blacklist_directory(str(path.parent))
+    print(self.db_controller.between('ImageBlacklist', 0, 10000))
 
   def tag(self, action='add', *args):
     if self.tag_popup:

@@ -29,10 +29,11 @@ class ImageController():
   def add_image(self, path, **kwargs):
     img_hash = self.get_hash(path)
     blacklist_check = kwargs.get('blacklist_check', True)
-    if blacklist_check and\
-       (self.is_blacklisted((img_hash, 'hash')) or
-       self.is_blacklisted((path, 'path'))):
-      return self
+
+    if blacklist_check:
+      if self.is_blacklisted((img_hash, 'hash')) or\
+        self.is_blacklisted((path, 'path')):
+        return self
     if not self._is_valid(path, img_hash, **kwargs):
       return self
 
@@ -58,7 +59,7 @@ class ImageController():
     if self.is_blacklisted((path, 'directory')):
       return self
     for file in get_files(path, toplevel_only):
-      self.add_image(file.path, blacklist_check=False, **kwargs)
+      self.add_image(file.path, **kwargs)
     return self
 
   def remove(self, path, **kwargs):
@@ -79,12 +80,16 @@ class ImageController():
     return self
 
   def blacklist_image(self, textable, textable_type):
+    if self.db.exists('ImageBlacklist', {'textable': textable}):
+      return self
     self.db.create('ImageBlacklist',
                               {'textable': textable,
                                'textable_type': textable_type})
     return self
 
   def blacklist_directory(self, path):
+    if self.db.exists('ImageBlacklist', {'textable': path}):
+      return self
     self.db.create('ImageBlackList',
                               {'textable': path, 'textable_type': 'directory'})
     ImageController.blacklist.add(path)

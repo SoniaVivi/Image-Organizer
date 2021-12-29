@@ -11,7 +11,8 @@ class SelectBehavior():
                       )
     self.is_right_click = None
 
-  def set_selected(self, clicked):
+  def set_selected(self, clicked, **kwargs):
+    self.on_ctrl_reclick = kwargs.get('on_ctrl_reclick', lambda x: 0)
     if self.is_right_click:
       return
 
@@ -19,6 +20,8 @@ class SelectBehavior():
       [img().remove_background() for img in self.selected if img() is not None]
       self.selected = [clicked]
     elif clicked in self.selected:
+      if self.pressed_keys['ctrl']:
+        self.on_ctrl_reclick(clicked)
       return
     elif self.pressed_keys['shift'] and len(self.selected) > 0:
       self.selected.append(clicked)

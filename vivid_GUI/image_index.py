@@ -135,7 +135,11 @@ class ImageIndex(GridLayout, SelectBehavior):
     self.clear()
 
   def set_selected(self, data, clicked):
-    is_left_click = super().set_selected(clicked)
+    def deselect(selected):
+      selected().remove_background()
+      self.selected = [x for x in self.selected if x != clicked]
+
+    is_left_click = super().set_selected(clicked, on_ctrl_reclick=deselect)
     if is_left_click:
       self.set_preview(data)
     return is_left_click
@@ -182,7 +186,6 @@ class ImageIndex(GridLayout, SelectBehavior):
         self.img_controller.blacklist_image(str(path), 'path')
       elif textable_type == 'directory':
         self.img_controller.blacklist_directory(str(path.parent))
-    print(self.db_controller.between('ImageBlacklist', 0, 10000))
 
   def tag(self, action='add', *args):
     if self.tag_popup:

@@ -44,7 +44,7 @@ class DatabaseController():
     else:
       sql = f"SELECT * FROM {table} WHERE "
       for (key, value) in attributes.items():
-        sql += f"{key} = '{value}' AND "
+        sql += f"{key} = \"{value}\" AND "
       sql = sql[0:-5]
 
     records = None

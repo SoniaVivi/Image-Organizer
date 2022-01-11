@@ -91,7 +91,7 @@ class DatabaseController():
   def search(self, table, attributes):
     sql = f"SELECT id FROM {table} WHERE "
     for (column, value) in attributes.items():
-      sql += f"{column} LIKE '%{value}%' AND "
+      sql += f"{column} LIKE \"%{value}%\" AND "
 
     sql = sql[0:-5]
     results = self.execute(sql).fetchall()

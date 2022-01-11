@@ -12,8 +12,8 @@ class Blacklist():
       if segment == current_node.text:
         if current_node.is_end_node:
           return
-        else:
-          current_node = current_node.find_or_add(segment)
+      else:
+        current_node = current_node.find_or_add(segment)
     current_node.is_end_node = True
 
   def exists(self, path):
@@ -23,11 +23,15 @@ class Blacklist():
     current_node = Blacklist.entry_node
 
     for segment in path_segments:
-      if segment == current_node.text and current_node.is_end_node:
+      if current_node.is_end_node:
         return True
-      current_node = current_node.find(segment)
-      if not current_node:
-        return False
+      if segment == current_node.text:
+        if current_node.is_end_node:
+          return True
+      else:
+        current_node = current_node.find(segment)
+        if not current_node:
+          return False
     return current_node.is_end_node
 
   def bds(self):

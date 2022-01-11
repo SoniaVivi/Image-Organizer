@@ -5,6 +5,7 @@ from vivid import filesearch as fs
 from pathlib import Path
 import os
 from shutil import copyfile
+from vivid.blacklist import Blacklist
 
 class TestImageController:
 
@@ -110,8 +111,10 @@ class TestImageController:
     self.img.add(IMG_PATH+'cat1.jpg')
     assert self.db.count('Image') == 0
 
-    assert self._temp_folder(lambda *args: self.img.add(f"{IMG_PATH}temp"),
-                             lambda : self.db.count('Image')) == 0
+    self._reset_table()
+    self.img.blacklist_directory(IMG_PATH+'cats')
+    self.img.add(IMG_PATH)
+    assert self.db.count('Image') ==  4
 
   def _reset_table(self):
     self._remove_thumbnails()
@@ -120,6 +123,7 @@ class TestImageController:
     self.db.connection.execute("DROP TABLE Tag")
     self.db.connection.execute("DROP TABLE ImageBlacklist")
     TestImageController.db.connection = self.db._setup_database(True)
+    Blacklist.entry_node = None
 
   def _temp_img(self, func, test, arg=None, path=IMG_PATH):
     if not file_exists('temp.jpg'):

@@ -38,6 +38,8 @@ class Blacklist():
     queue = [Blacklist.entry_node]
     while len(queue):
       node = queue.pop(0)
+      print(f"From Blacklist.bds: Node.text == {node.text}\
+              Node.is_end_node == {node.is_end_node}")
 
       for child in node.children.values():
         queue.append(child)

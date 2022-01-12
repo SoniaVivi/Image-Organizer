@@ -7,10 +7,13 @@ from .database_controller import DatabaseController
 from .blacklist import Blacklist
 from os.path import isdir, isfile, exists
 from pathlib import Path
+from .config import Config
 import random, string
+
 
 class ImageController():
   blacklist = Blacklist()
+  logging = Config().read('image_controller', 'logging')
 
   def __init__(self, db=None, test=False, **kwargs):
     self.table_name = 'Image'
@@ -33,8 +36,12 @@ class ImageController():
     if blacklist_check:
       if self.is_blacklisted((img_hash, 'hash')) or\
         self.is_blacklisted((path, 'path')):
+        if ImageController.logging == 'True':
+          print(f"Skipping {path} | Reason: Blacklisted path or directory ancestor")
         return self
     if not self._is_valid(path, img_hash, **kwargs):
+      if ImageController.logging == 'True':
+        print(f"Skipping {path} | Reason: Image is invalid or already exists")
       return self
 
     name = self._generate_name(path, img_hash, **kwargs)
@@ -53,6 +60,8 @@ class ImageController():
       self.table_name, dict(zip(list(map(lambda x: x[0], attribute_pairs)),
                                 list(map(lambda x: x[1], attribute_pairs)))))
     self._create_thumbnail(path, record_id)
+    if ImageController.logging == 'True':
+      print(f"Added {path}")
     return self
 
   def add_directory(self, path, toplevel_only=True, **kwargs):
@@ -155,7 +164,7 @@ class ImageController():
         Path(f"{self.thumbnails_path + str(image_id)}.png"), format="PNG")
 
   def _retrieve_blacklisted(self):
-    if not self.use_blacklist or ImageController.blacklist.entry_node:
+    if not self.use_blacklist:
       return
 
     sql = f"SELECT textable AS directories\

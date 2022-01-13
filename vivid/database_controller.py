@@ -148,7 +148,9 @@ class DatabaseController():
                                          list(attributes.values()),
                                          'AND')
     sql = f"SELECT id FROM {table} WHERE {attributes_sql}"
-    return [*self.execute(sql).fetchone(), None][0]
+    result = self.execute(sql).fetchone()
+    if result:
+      return result[0]
 
   def to_record(self, table, record_data):
     return dict(zip(self.get_columns(table), record_data))

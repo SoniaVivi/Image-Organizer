@@ -1,36 +1,50 @@
 # Image Organizer
 
-![mocha＠「背景作画」改訂版](https://user-images.githubusercontent.com/55420399/126858555-d1a11c0d-015b-4a15-a22b-104f00f65faf.png)
-All images belong to mocha＠ 「背景作画」改訂版, https://www.pixiv.net/en/users/648285
-
 **Features**
 
-* Adding images in a top-level and/or nested directory
+- Adding images in a top-level and/or nested directory
 
-* Viewing properties of an image (name, location, hash, tags)
+- Viewing properties of an image (name, location, hash, tags)
 
-* Tagging Images
+- Tagging Images
 
-* Renaming images
+- Renaming images
 
-* Finding the location of an image in a single double click
+- Finding the location of an image in a single double click
 
-* Filtering images
+- Filtering images
+
+- Blacklisting images and directories
 
 **Testing**
 
-Tests must be ran in the root directory to properly function
+Tests can be ran using `pytest` in the root directory.
 
-**Dependencies**
+**User installation and updating**
 
-Python 3.9.5
+1. Download the latest release.
 
-Fleep 1.0.1
+2. Unzip the attached file in your chosen directory.
 
-ImageHash 4.1.0
+3. Run vivid using `./vivid` in the newly extracted directory.
 
-SQLite 3
+Follow the same steps when updating and overwrite all files. All thumbnail and image data will be preserved
 
-Kivy 2.0.0
+**Installing from source**
 
-Pytest 6.2.3
+1. Clone the repository
+
+2. Create a virtual environment by running
+
+   `python3 -m virtualenv [environment name]`
+
+3. Activate the environment using
+   `source [environment name]/bin/activate`
+
+4. Install all dependencies using pip by running
+
+   `python3 -m pip install -r ./requirements.txt`
+
+**License**
+
+Vivid is released under the terms of the GPL-3.0-or-later license. Please refer to the LICENSE file.

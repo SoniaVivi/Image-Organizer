@@ -45,6 +45,14 @@ Follow the same steps when updating and overwrite all files. All thumbnail and i
 
    `python3 -m pip install -r ./requirements.txt`
 
+**Generating an executable**
+
+Follow the steps below "Installing from source" then run
+
+`pyinstaller --paths . --onedir main.py`
+
+Pyinstaller may not detect ./vivid.kv, ./fonts, the fleep package, and/or kivy_install. If this occurs copy and move the missing files/directories to ./dist/main.
+
 **License**
 
 Vivid is released under the terms of the GPL-3.0-or-later license. Please refer to the LICENSE file.

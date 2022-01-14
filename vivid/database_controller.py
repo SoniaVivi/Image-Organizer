@@ -61,23 +61,22 @@ class DatabaseController():
         return [self.to_record(table, record) for record in records]
     return records
 
-  def find_many(self, table, attributes={}, **kwargs):
+  def find_many(self, table, attributes=[], **kwargs):
     sql = f"SELECT * FROM {table} AS a WHERE "
     exclude_sql = f"SELECT id FROM {table} WHERE "
     inclusive = kwargs.get('inclusive', True)
-    exclude_attributes = kwargs.get('exclude', {})
+    exclude_attributes = kwargs.get('exclude', [])
 
-    sql += self.sql_from_lists(list(attributes.keys()),
-                                    list(attributes.values()),
-                                    'OR' if inclusive else 'AND')
+    sql += self.sql_from_lists(*self._data_from_dicts(attributes),
+                               'OR' if inclusive else 'AND')
 
     if len(exclude_attributes):
-      exclude_sql += self.sql_from_lists(list(exclude_attributes.keys()),
-                                    list(exclude_attributes.values()),
+      exclude_sql += self.sql_from_lists(
+                                    *self._data_from_dicts(exclude_attributes),
                                     'OR')
       sql += f"{'AND' if len(attributes) else ''}\
               a.id NOT IN ({exclude_sql})".replace('  ', " ")
-    return self.execute(sql).fetchall()
+    return [self.to_record(table, x) for x in self.execute(sql).fetchall()]
 
   def between(self, table, start, stop, *args):
     asc = start < stop
@@ -154,6 +153,15 @@ class DatabaseController():
 
   def to_record(self, table, record_data):
     return dict(zip(self.get_columns(table), record_data))
+
+  def _data_from_dicts(self, list_of_dicts):
+    keys = []
+    values = []
+    for dict_data in list_of_dicts:
+      k, v = list(dict_data.items())[0]
+      keys.append(k)
+      values.append(v)
+    return [keys, values]
 
   def _table_exists(self, table_name):
     exists = self.execute(f"SELECT count(name)\

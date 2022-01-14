@@ -35,15 +35,15 @@ class TestDatabaseController:
 
   def test_find_many(self):
     self.db.create('Image', {'name': 'f'})
-    assert len(self.db.find_many('Image', {'name': 'f'})) == 3
-    assert len(self.db.find_many('Image', {'image_type': 'f', 'path': 'f'}))\
+    assert len(self.db.find_many('Image', [{'name': 'f'}])) == 3
+    assert len(self.db.find_many('Image', [{'image_type': 'f'}, {'path': 'f'}]))\
             == 2
     assert len(self.db.find_many('Image',
-                                 {'name': 'f', 'hash': 'f'},
+                                 [{'name': 'f'}, {'hash': 'f'}],
                                   inclusive=False)) == 1
     assert len(self.db.find_many('Image',
-                                 {'name': 'f'}, exclude={'hash': 'f'})) == 2
-    assert len(self.db.find_many('Image', exclude={'hash': 'f'})) == 2
+                                 [{'name': 'f'}], exclude=[{'hash': 'f'}])) == 2
+    assert len(self.db.find_many('Image', exclude=[{'hash': 'f'}])) == 2
 
   def test_delete(self):
     row_count = self.db.count('Image')

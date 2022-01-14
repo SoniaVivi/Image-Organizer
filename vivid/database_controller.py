@@ -61,25 +61,24 @@ class DatabaseController():
         return [self.to_record(table, record) for record in records]
     return records
 
-  def find_many(self, table, attributes={}, **kwargs):
+  def find_many(self, table, attributes=[], **kwargs):
     sql = f"SELECT * FROM {table} AS a WHERE "
     exclude_sql = f"SELECT id FROM {table} WHERE "
     inclusive = kwargs.get('inclusive', True)
-    exclude_attributes = kwargs.get('exclude', {})
+    exclude_attributes = kwargs.get('exclude', [])
 
-    sql += self.sql_from_lists(list(attributes.keys()),
-                                    list(attributes.values()),
-                                    'OR' if inclusive else 'AND')
+    sql += self.sql_from_lists(*self._data_from_dicts(attributes),
+                               'OR' if inclusive else 'AND')
 
     if len(exclude_attributes):
-      exclude_sql += self.sql_from_lists(list(exclude_attributes.keys()),
-                                    list(exclude_attributes.values()),
+      exclude_sql += self.sql_from_lists(
+                                    *self._data_from_dicts(exclude_attributes),
                                     'OR')
       sql += f"{'AND' if len(attributes) else ''}\
               a.id NOT IN ({exclude_sql})".replace('  ', " ")
-    return self.execute(sql).fetchall()
+    return [self.to_record(table, x) for x in self.execute(sql).fetchall()]
 
-  def between(self, table, start, stop, *args):
+  def between(self, table, start, stop):
     asc = start < stop
     lower = start if asc else stop
     upper = stop if asc else start
@@ -95,15 +94,7 @@ class DatabaseController():
 
     sql = sql[0:-5]
     results = self.execute(sql).fetchall()
-    return [self.find_by('Image', ('id', result[0])) for result in results]
-
-  def next_id(self, table, value, asc=True):
-    placholder_id = -1 if asc else 2 ** 63
-    operator = '>' if asc else '<'
-    order_by = 'ASC' if asc else 'DESC'
-    sql = '''SELECT id FROM %s WHERE id %s %s ORDER BY id %s'''
-    record = self.execute(sql % (table, operator, value, order_by,)).fetchone()
-    return record[0] if record else placholder_id
+    return [self.find_by(table, ('id', result[0])) for result in results]
 
   def get_first(self, table):
     return self._get_limit(table, False)
@@ -155,6 +146,15 @@ class DatabaseController():
   def to_record(self, table, record_data):
     return dict(zip(self.get_columns(table), record_data))
 
+  def _data_from_dicts(self, list_of_dicts):
+    keys = []
+    values = []
+    for dict_data in list_of_dicts:
+      k, v = list(dict_data.items())[0]
+      keys.append(k)
+      values.append(v)
+    return [keys, values]
+
   def _table_exists(self, table_name):
     exists = self.execute(f"SELECT count(name)\
                             FROM sqlite_master\
@@ -166,6 +166,7 @@ class DatabaseController():
 
   def _get_limit(self, table, asc=True):
     order_by = 'DESC' if asc else 'ASC'
+    # Returning an empty record alleviates crashing in GUI on first start.
     placholder_id = -1 if asc else 2 ** 63
 
     columns = self.get_columns(table)

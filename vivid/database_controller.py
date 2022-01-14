@@ -78,7 +78,7 @@ class DatabaseController():
               a.id NOT IN ({exclude_sql})".replace('  ', " ")
     return [self.to_record(table, x) for x in self.execute(sql).fetchall()]
 
-  def between(self, table, start, stop, *args):
+  def between(self, table, start, stop):
     asc = start < stop
     lower = start if asc else stop
     upper = stop if asc else start

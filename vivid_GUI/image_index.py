@@ -110,8 +110,7 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
       quantity = quantity * -1
     query_result = self.between('Image',
                                   next_id,
-                                  next_id + quantity,
-                                  self.sort == 'ASC')
+                                  next_id + quantity)
     if len(query_result) < 1:
       query_result.append(None)
 

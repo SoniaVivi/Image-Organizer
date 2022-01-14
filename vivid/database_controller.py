@@ -94,7 +94,7 @@ class DatabaseController():
 
     sql = sql[0:-5]
     results = self.execute(sql).fetchall()
-    return [self.find_by('Image', ('id', result[0])) for result in results]
+    return [self.find_by(table, ('id', result[0])) for result in results]
 
   def next_id(self, table, value, asc=True):
     placholder_id = -1 if asc else 2 ** 63

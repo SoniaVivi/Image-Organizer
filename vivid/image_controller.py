@@ -127,7 +127,7 @@ class ImageController():
 
     return tuple(img_path)
 
-  def existance_check(self):
+  def existence_check(self):
     for image in self.db.between('Image',
                                   self.db.get_first('Image')['id'],
                                   self.db.get_last('Image')['id']):

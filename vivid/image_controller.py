@@ -30,7 +30,7 @@ class ImageController():
     return self
 
   def add_image(self, path, **kwargs):
-    img_hash = self.get_hash(path)
+    img_hash = self._get_hash(path)
     blacklist_check = kwargs.get('blacklist_check', True)
 
     if blacklist_check:
@@ -102,14 +102,7 @@ class ImageController():
     self.db.create('ImageBlackList',
                               {'textable': path, 'textable_type': 'directory'})
     ImageController.blacklist.add(path)
-
-  def get_hash(self, path):
-    try:
-      h = imagehash.phash(Image.open(path))
-    except Exception as e:
-      print(e)
-    else:
-      return str(h)
+    return self
 
   def get_thumbnail(self, image_id):
     return f"{self.thumbnails_path}{image_id}.png"
@@ -156,6 +149,14 @@ class ImageController():
     return not not self.db.find_by('ImageBlacklist',
                                               {'textable': textable,
                                               'textable_type': textable_type})
+
+  def _get_hash(self, path):
+    try:
+      h = imagehash.phash(Image.open(path))
+    except Exception as e:
+      print(e)
+    else:
+      return str(h)
 
   def _create_thumbnail(self, path, image_id):
     with Image.open(path) as img:

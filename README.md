@@ -20,6 +20,12 @@
 
 Tests can be ran using `pytest` in the root directory.
 
+**Documentation**
+
+Documentation can be found under the /docs directory in its respective module. Ex. `./vivid/docs` contains the documentation for `./vivid`.
+
+Please note that documentation is still being written and may be partially incomplete or absent for various modules.
+
 **User installation and updating**
 
 1. Download the latest release.

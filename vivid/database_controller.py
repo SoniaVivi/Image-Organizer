@@ -96,14 +96,6 @@ class DatabaseController():
     results = self.execute(sql).fetchall()
     return [self.find_by(table, ('id', result[0])) for result in results]
 
-  def next_id(self, table, value, asc=True):
-    placholder_id = -1 if asc else 2 ** 63
-    operator = '>' if asc else '<'
-    order_by = 'ASC' if asc else 'DESC'
-    sql = '''SELECT id FROM %s WHERE id %s %s ORDER BY id %s'''
-    record = self.execute(sql % (table, operator, value, order_by,)).fetchone()
-    return record[0] if record else placholder_id
-
   def get_first(self, table):
     return self._get_limit(table, False)
 
@@ -174,6 +166,7 @@ class DatabaseController():
 
   def _get_limit(self, table, asc=True):
     order_by = 'DESC' if asc else 'ASC'
+    # Returning an empty record alleviates crashing in GUI on first start.
     placholder_id = -1 if asc else 2 ** 63
 
     columns = self.get_columns(table)

@@ -1,6 +1,6 @@
 # Image Organizer
 
-**Features**
+## Features
 
 - Adding images in a top-level and/or nested directory
 
@@ -16,17 +16,21 @@
 
 - Blacklisting images and directories
 
-**Testing**
+## Testing
 
 Tests can be ran using `pytest` in the root directory.
 
-**Documentation**
+## User Guide
+
+A user guide can be found in the top level directory of the repository named "user_guide.md" and is included in releases v1.5.0+.
+
+## Documentation
 
 Documentation can be found under the /docs directory in its respective module. Ex. `./vivid/docs` contains the documentation for `./vivid`.
 
 Please note that documentation is still being written and may be partially incomplete or absent for various modules.
 
-**User installation and updating**
+## User installation and updating
 
 1. Download the latest release.
 
@@ -34,9 +38,9 @@ Please note that documentation is still being written and may be partially incom
 
 3. Run vivid using `./vivid` in the newly extracted directory.
 
-Follow the same steps when updating and overwrite all files. All thumbnail and image data will be preserved
+Follow the same steps when updating and choose to overwrite all files. All thumbnail and image data will be preserved
 
-**Installing from source**
+## Installing from source
 
 1. Clone the repository
 
@@ -51,7 +55,7 @@ Follow the same steps when updating and overwrite all files. All thumbnail and i
 
    `python3 -m pip install -r ./requirements.txt`
 
-**Generating an executable**
+## Generating an executable
 
 Follow the steps below "Installing from source" then run
 
@@ -59,6 +63,6 @@ Follow the steps below "Installing from source" then run
 
 Pyinstaller may not detect ./vivid.kv, ./fonts, the fleep package, and/or kivy_install. If this occurs copy and move the missing files/directories to ./dist/main.
 
-**License**
+## License
 
 Vivid is released under the terms of the GPL-3.0-or-later license. Please refer to the LICENSE file.

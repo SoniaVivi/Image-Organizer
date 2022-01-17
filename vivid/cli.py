@@ -66,7 +66,7 @@ class CLI(cmd.Cmd):
     return CLI.last_result
 
   def display(self, table, **kwargs):
-    columns = CLI.controllers['db'].get_columns('Image')
+    columns = CLI.controllers['db'].get_columns(table)
     begin_at = kwargs.get('begin_at', 1)
     end_at = kwargs.get('end_at', 11)
     records = CLI.controllers['db'].between(table, begin_at, end_at)

@@ -5,7 +5,7 @@ from .helpers import CURRENT_PATH, IMG_PATH
 
 class TestTagController:
   db = dc.DatabaseController(True)
-  img = ic.ImageController(db, True)
+  img = ic.ImageController(db, True, use_blacklist=False)
   tag = tc.TagController(db)
 
   def test_create(self):

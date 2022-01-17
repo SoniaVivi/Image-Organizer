@@ -12,10 +12,10 @@ from ..store import Store
 class Toolbar(BoxLayout):
   def __init__(self, **kwargs):
     super(Toolbar, self).__init__(**kwargs)
-    self.current_index_child = Store().subscribe(self,
+    self.current_index_child = Store.subscribe(self,
                                                  'current_index_child',
                                                  'current_index_child')
-    self.set_child = Store().subscribe(self, 'set_index', 'set_child')
+    self.set_child = Store.subscribe(self, 'set_index', 'set_child')
     file_button = ToolbarButton(text="Add Images")
     tag_list_button = ToolbarButton(text="Tag List")
     stats_button = StatsButton()
@@ -39,15 +39,15 @@ class Toolbar(BoxLayout):
     self.add_widget(self.folder_checkbox)
     self.add_widget(Label(text='Folder', size_hint_max=(40, 20)))
     self.modal = ToolbarModal()
-    Store().dispatch('searchbar', toolbar_search)
+    Store.dispatch('searchbar', toolbar_search)
 
   def on_search(self, instance, *args):
     if self.current_index_child == 'tag_list':
       self.toggle_index()
     if len(instance.text) < 2:
-      Store().state['update_sort']()
+      Store.state['update_sort']()
     else:
-      Store().state['search_images'](instance.text,
+      Store.state['search_images'](instance.text,
                                      tags=self.tag_checkbox.active,
                                      folder=self.folder_checkbox.active)
 

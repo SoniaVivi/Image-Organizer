@@ -24,40 +24,23 @@ class TagController:
 
   def all(self, value=None):
     if type(value) == int:
-      tags = self.db.find_by('ImageTag', {'image_id': value}, True)
-      if not tags:
-        return ()
-      tag_ids = [tag['tag_id'] for tag in tags]
-      return tuple([self.db.find_by(
-                                    'Tag',
-                                    {'id': tag_id})['name']
-                      for tag_id in tag_ids])
+      return self._all_from_image_id(value)
     elif type(value) == str:
-      tag = self.db.find_by('Tag', {'name': value})
-      if not tag:
-        return ()
-      tag_id = tag['id']
-      image_ids = [tag['image_id'] for tag in self.db.find_by('ImageTag',
-                                                            {'tag_id': tag_id},
-                                                            True)]
-      return tuple([self.db.find_by('Image', {'id': img_id})
-                                                      for img_id in image_ids])
+      return self._all_from_tag_name(value)
 
   def remove(self, id, tag_name):
-    tag = self.db.find_by('Tag', {'name': tag_name})
+    tag_id = self.db.get_id('Tag', {'name': tag_name})
 
-    if not tag:
+    if not tag_id:
       return
 
-    tag_id = tag['id']
-    image_tag = self.db.find_by('ImageTag',
-                                  {'image_id': id,
-                                  'tag_id': tag_id})
+    image_tag_id = self.db.get_id('ImageTag',
+                                  {'image_id': id, 'tag_id': tag_id})
 
-    if not image_tag:
+    if not image_tag_id:
       return
 
-    self.db.delete('ImageTag', ('id', image_tag['id']))
+    self.db.delete('ImageTag', ('id', image_tag_id))
 
     if not self.db.exists('ImageTag', {'tag_id': tag_id}):
       self.db.delete('Tag', ('id', tag_id))
@@ -98,3 +81,27 @@ class TagController:
     return tuple(map(
       lambda image: dict(zip(self.image_table_columns, image)),
       images))
+
+  def _all_from_image_id(self, id):
+      tags = self.db.find_by('ImageTag', {'image_id': id}, True)
+      if not tags:
+        return ()
+      sql = self.db.sql_from_lists('id',
+                                      [tag['tag_id'] for tag in tags],
+                                      "OR")
+      return tuple(
+        [x[0] for x in\
+          self.db.execute(f"SELECT name FROM Tag WHERE {sql}").fetchall()])
+
+  def _all_from_tag_name(self, name):
+      tag_id = self.db.get_id('Tag', {'name': name})
+      if not tag_id:
+        return ()
+      sql = f"SELECT *\
+              FROM Image\
+                WHERE Image.id IN (SELECT image_id\
+                                   FROM ImageTag\
+                                   WHERE tag_id={tag_id})"
+      return tuple(
+        [self.db.to_record('Image', record)\
+          for record in self.db.execute(sql).fetchall()])

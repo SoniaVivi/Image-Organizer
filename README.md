@@ -1,36 +1,64 @@
 # Image Organizer
 
-![mocha＠「背景作画」改訂版](https://user-images.githubusercontent.com/55420399/126858555-d1a11c0d-015b-4a15-a22b-104f00f65faf.png)
-All images belong to mocha＠ 「背景作画」改訂版, https://www.pixiv.net/en/users/648285
-
 **Features**
 
-* Adding images in a top-level and/or nested directory
+- Adding images in a top-level and/or nested directory
 
-* Viewing properties of an image (name, location, hash, tags)
+- Viewing properties of an image (name, location, hash, tags)
 
-* Tagging Images
+- Tagging Images
 
-* Renaming images
+- Renaming images
 
-* Finding the location of an image in a single double click
+- Finding the location of an image in a single double click
 
-* Filtering images
+- Filtering images
+
+- Blacklisting images and directories
 
 **Testing**
 
-Tests must be ran in the root directory to properly function
+Tests can be ran using `pytest` in the root directory.
 
-**Dependencies**
+**Documentation**
 
-Python 3.9.5
+Documentation can be found under the /docs directory in its respective module. Ex. `./vivid/docs` contains the documentation for `./vivid`.
 
-Fleep 1.0.1
+Please note that documentation is still being written and may be partially incomplete or absent for various modules.
 
-ImageHash 4.1.0
+**User installation and updating**
 
-SQLite 3
+1. Download the latest release.
 
-Kivy 2.0.0
+2. Unzip the attached file in your chosen directory.
 
-Pytest 6.2.3
+3. Run vivid using `./vivid` in the newly extracted directory.
+
+Follow the same steps when updating and overwrite all files. All thumbnail and image data will be preserved
+
+**Installing from source**
+
+1. Clone the repository
+
+2. Create a virtual environment by running
+
+   `python3 -m virtualenv [environment name]`
+
+3. Activate the environment using
+   `source [environment name]/bin/activate`
+
+4. Install all dependencies using pip by running
+
+   `python3 -m pip install -r ./requirements.txt`
+
+**Generating an executable**
+
+Follow the steps below "Installing from source" then run
+
+`pyinstaller --paths . --onedir main.py`
+
+Pyinstaller may not detect ./vivid.kv, ./fonts, the fleep package, and/or kivy_install. If this occurs copy and move the missing files/directories to ./dist/main.
+
+**License**
+
+Vivid is released under the terms of the GPL-3.0-or-later license. Please refer to the LICENSE file.

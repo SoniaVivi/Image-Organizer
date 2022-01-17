@@ -1,17 +1,18 @@
+from pathlib import PurePath
 from kivy.core.window import Window
 from kivy.uix.gridlayout import GridLayout
 from vivid.image_controller import ImageController
 from vivid.database_controller import DatabaseController
 from vivid.tag_controller import TagController
 from vivid.config import Config
-from .context_menu.context_menu import ContextMenu
+from vivid_GUI.context_menu.context_menu_behavior import ContextMenuBehavior
 from .thumbnail import Thumbnail
 from .context_menu.add_tag_popup import AddTagPopup
 from .context_menu.remove_tag_popup import RemoveTagPopup
 from .shared.select_behavior import SelectBehavior
 from .store import Store
 
-class ImageIndex(GridLayout, SelectBehavior):
+class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
   img_controller = ImageController()
   db_controller = DatabaseController()
   tag_controller = TagController()
@@ -25,9 +26,8 @@ class ImageIndex(GridLayout, SelectBehavior):
   def __init__(self, **kwargs):
     super(ImageIndex, self).__init__(**kwargs)
     self.bind(width=self.set_cols)
-    self.set_preview = Store().subscribe(self, 'set_preview_image', 'set_preview')
-    self.rename_image = Store().subscribe(self, 'rename_image', 'rename_image')
-    self.menu = None
+    self.set_preview = Store.subscribe(self, 'set_preview_image', 'set_preview')
+    self.rename_image = Store.subscribe(self, 'rename_image', 'rename_image')
     self.tag_popup = False
     self.scroll_pos = 1.0
     self.sort = self.config.read('image_index', 'sort')
@@ -35,9 +35,36 @@ class ImageIndex(GridLayout, SelectBehavior):
     self.bind(on_touch_down = self.right_click)
     self.set_cols()
     self.fill_space()
-    Store().dispatch("update_sort", self.update_sort)
-    Store().dispatch("search_images", self.search_images)
-    Store().dispatch("refresh", self.clear)
+    self.menu_options =  [
+      ([
+        ("Add Tag", self.tag),
+        ("Remove Tag", lambda *args: self.tag(action="remove")),
+        ("Remove", self.remove_image),
+        ("Remove and Blacklist",
+          lambda: (self.blacklist(),
+                  self.remove_image()),),
+        ("Remove and Blacklist Parent Directory",
+          lambda: (self.blacklist('directory'),
+                  self.remove_image())),
+        ("Delete",
+            lambda *args : self.remove_image(keep_on_disk=False)),
+        ("Delete and Blacklist Parent Directory",
+          lambda: (self.blacklist('directory'),
+                  self.remove_image(keep_on_disk=False))),
+       ],
+      ),
+      ([
+        ("Rename", lambda *args: self.rename(on_disk=True)),
+        ("Rename (disk only)",
+          lambda *args: self.rename(False, True)),
+        ("Rename (database only)", self.rename),
+        ],
+        lambda: len(self.selected) == 1
+      )
+    ]
+    Store.dispatch("update_sort", self.update_sort)
+    Store.dispatch("search_images", self.search_images)
+    Store.dispatch("refresh", self.clear)
 
   def set_cols(self, obj=None, width=Window.width):
     self.cols=int((width / 250))
@@ -83,8 +110,7 @@ class ImageIndex(GridLayout, SelectBehavior):
       quantity = quantity * -1
     query_result = self.between('Image',
                                   next_id,
-                                  next_id + quantity,
-                                  self.sort == 'ASC')
+                                  next_id + quantity)
     if len(query_result) < 1:
       query_result.append(None)
 
@@ -124,7 +150,8 @@ class ImageIndex(GridLayout, SelectBehavior):
 
   def clear(self):
     self.clear_widgets()
-    self.next_id = self._get_initial_id()
+    if self.sort != 'search':
+      self.next_id = self._get_initial_id()
     self.fill_space()
 
   def update_sort(self, *args):
@@ -133,35 +160,23 @@ class ImageIndex(GridLayout, SelectBehavior):
     self.clear()
 
   def set_selected(self, data, clicked):
-    is_left_click = super().set_selected(clicked)
+    def deselect(selected):
+      selected().remove_background()
+      self.selected = [x for x in self.selected if x != clicked]
+
+    is_left_click = super().set_selected(clicked, on_ctrl_reclick=deselect)
     if is_left_click:
       self.set_preview(data)
     return is_left_click
 
-  def right_click(self, instance, touch):
-    if self.menu:
-      self.menu.close()
-
-    self.is_right_click = touch.button == 'right'
-    if self.is_right_click and len(self.selected):
-      menu_options = [
-                      ("Add Tag", self.tag),
-                      ("Remove Tag", lambda *args: self.tag(action="remove")),
-                      ("Remove", self.remove_image),
-                      ("Delete",
-                          lambda *args : self.remove_image(keep_on_disk=False))
-                     ]
-
-      if len(self.selected) == 1:
-        menu_options += [
-                         ("Rename", lambda *args: self.rename(on_disk=True)),
-                         ("Rename (disk only)",
-                           lambda *args: self.rename(False, True)),
-                         ("Rename (database only)", self.rename)
-                        ]
-
-      self.menu = ContextMenu(menu_options, pos=touch.pos)
-      self.menu.open()
+  def blacklist(self, blacklist_type='image'):
+    textable_type = 'path' if blacklist_type == 'image' else 'directory'
+    for selected in self.selected:
+      path = PurePath(selected().data['path'])
+      if textable_type == 'path':
+        self.img_controller.blacklist_image(str(path), 'path')
+      elif textable_type == 'directory':
+        self.img_controller.blacklist_directory(str(path.parent))
 
   def tag(self, action='add', *args):
     if self.tag_popup:
@@ -200,7 +215,7 @@ class ImageIndex(GridLayout, SelectBehavior):
 
   def remove_image(self, keep_on_disk=True, *args):
     for selected in self.selected:
-      self.remove(selected().data['path'], keep_on_disk)
+      self.remove(selected().data['path'], db_only=keep_on_disk)
       self.remove_widget(selected())
     self.selected = []
     self.fill_space()

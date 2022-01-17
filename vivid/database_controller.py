@@ -1,6 +1,8 @@
 import sqlite3
 
 class DatabaseController():
+  DEFAULT_TABLES = ['Image', 'Tag', 'ImageTag', 'ImageBlacklist']
+
   def __init__(self, test=False, conn=None):
     if conn:
       self.connection = conn
@@ -8,7 +10,7 @@ class DatabaseController():
       self.connection = self._setup_database(test)
     else:
       self.connection = sqlite3.connect('imagedb.db')
-      for table in ['Image', 'Tag', 'ImageTag']:
+      for table in DatabaseController.DEFAULT_TABLES:
         self._table_exists(table)
 
   def create(self, table, attributes):
@@ -42,7 +44,7 @@ class DatabaseController():
     else:
       sql = f"SELECT * FROM {table} WHERE "
       for (key, value) in attributes.items():
-        sql += f"{key} = '{value}' AND "
+        sql += f"{key} = \"{value}\" AND "
       sql = sql[0:-5]
 
     records = None
@@ -54,54 +56,45 @@ class DatabaseController():
 
     if records:
       if not fetchall:
-        return self._to_record(table, records)
+        return self.to_record(table, records)
       else:
-        return [self._to_record(table, record) for record in records]
+        return [self.to_record(table, record) for record in records]
     return records
 
-  def find_many(self, table, attributes={}, **kwargs):
+  def find_many(self, table, attributes=[], **kwargs):
     sql = f"SELECT * FROM {table} AS a WHERE "
     exclude_sql = f"SELECT id FROM {table} WHERE "
     inclusive = kwargs.get('inclusive', True)
-    exclude_attributes = kwargs.get('exclude', {})
+    exclude_attributes = kwargs.get('exclude', [])
 
-    sql += self.sql_from_lists(list(attributes.keys()),
-                                    list(attributes.values()),
-                                    'OR' if inclusive else 'AND')
+    sql += self.sql_from_lists(*self._data_from_dicts(attributes),
+                               'OR' if inclusive else 'AND')
 
     if len(exclude_attributes):
-      exclude_sql += self.sql_from_lists(list(exclude_attributes.keys()),
-                                    list(exclude_attributes.values()),
+      exclude_sql += self.sql_from_lists(
+                                    *self._data_from_dicts(exclude_attributes),
                                     'OR')
       sql += f"{'AND' if len(attributes) else ''}\
               a.id NOT IN ({exclude_sql})".replace('  ', " ")
-    return self.execute(sql).fetchall()
+    return [self.to_record(table, x) for x in self.execute(sql).fetchall()]
 
-  def between(self, table, start, stop, *args):
+  def between(self, table, start, stop):
     asc = start < stop
     lower = start if asc else stop
     upper = stop if asc else start
     order = ' ORDER BY id ASC' if asc else ' ORDER BY id DESC'
     sql = f"SELECT * FROM {table} WHERE id BETWEEN {lower} AND {upper}"
     results = self.execute(sql + order).fetchall()
-    return [self._to_record(table, result) for result in results if result]
+    return [self.to_record(table, result) for result in results if result]
 
   def search(self, table, attributes):
     sql = f"SELECT id FROM {table} WHERE "
     for (column, value) in attributes.items():
-      sql += f"{column} LIKE '%{value}%' AND "
+      sql += f"{column} LIKE \"%{value}%\" AND "
 
     sql = sql[0:-5]
     results = self.execute(sql).fetchall()
-    return [self.find_by('Image', ('id', result[0])) for result in results]
-
-  def next_id(self, table, value, asc=True):
-    placholder_id = -1 if asc else 2 ** 63
-    operator = '>' if asc else '<'
-    order_by = 'ASC' if asc else 'DESC'
-    sql = '''SELECT id FROM %s WHERE id %s %s ORDER BY id %s'''
-    record = self.execute(sql % (table, operator, value, order_by,)).fetchone()
-    return record[0] if record else placholder_id
+    return [self.find_by(table, ('id', result[0])) for result in results]
 
   def get_first(self, table):
     return self._get_limit(table, False)
@@ -141,6 +134,27 @@ class DatabaseController():
       sql += f"='{value}' {joiner} "
     return sql[:-(len(joiner) + 2)]
 
+  def get_id(self, table, attributes):
+    attributes_sql = self.sql_from_lists(list(attributes.keys()),
+                                         list(attributes.values()),
+                                         'AND')
+    sql = f"SELECT id FROM {table} WHERE {attributes_sql}"
+    result = self.execute(sql).fetchone()
+    if result:
+      return result[0]
+
+  def to_record(self, table, record_data):
+    return dict(zip(self.get_columns(table), record_data))
+
+  def _data_from_dicts(self, list_of_dicts):
+    keys = []
+    values = []
+    for dict_data in list_of_dicts:
+      k, v = list(dict_data.items())[0]
+      keys.append(k)
+      values.append(v)
+    return [keys, values]
+
   def _table_exists(self, table_name):
     exists = self.execute(f"SELECT count(name)\
                             FROM sqlite_master\
@@ -148,13 +162,11 @@ class DatabaseController():
                             AND name='{table_name}' ").fetchone()[0]
     if exists == 0:
       print(f"Creating table {table_name}")
-      self._setup_database(False, [table_name])
-
-  def _to_record(self, table, record_data):
-    return dict(zip(self.get_columns(table), record_data))
+      self._setup_database(False, tables=[table_name])
 
   def _get_limit(self, table, asc=True):
     order_by = 'DESC' if asc else 'ASC'
+    # Returning an empty record alleviates crashing in GUI on first start.
     placholder_id = -1 if asc else 2 ** 63
 
     columns = self.get_columns(table)
@@ -165,7 +177,8 @@ class DatabaseController():
       record_data[0] = placholder_id
     return dict(zip(columns, record_data))
 
-  def _setup_database(self, test, tables=['Image', 'Tag', 'ImageTag']):
+  def _setup_database(self, test, **kwargs):
+    tables = kwargs.get('tables', DatabaseController.DEFAULT_TABLES)
     conn = sqlite3.connect('imagedb.db') if not test else sqlite3.connect(':memory:')
     table_sql = {
                   'Image':'''CREATE TABLE Image
@@ -176,7 +189,11 @@ class DatabaseController():
                   'Tag':'''CREATE TABLE Tag
                     (id integer primary key, name text)''',
                   'ImageTag':'''CREATE TABLE ImageTag
-                    (id integer primary key, tag_id integer, image_id int)'''
+                    (id integer primary key, tag_id integer, image_id int)''',
+                  'ImageBlacklist':'''CREATE TABLE ImageBlacklist
+                    (id integer primary key,
+                     textable string,
+                     textable_type string)'''
                 }
     for table in tables:
       conn.execute(table_sql[table])

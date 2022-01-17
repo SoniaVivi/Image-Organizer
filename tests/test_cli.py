@@ -7,8 +7,8 @@ from vivid.tag_controller import TagController as tc
 class TestCLI():
   cli = CLI(test=True)
   db = dc(test=True)
-  img = ic(db=db)
-  tag = tc(db=db)
+  img = ic(db=db, test=True)
+  tag = tc(db=db, test=True)
 
   def test_execute(self):
     columns = [col[1] for col in self.cli.execute(f"PRAGMA table_info(Image)")]

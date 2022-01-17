@@ -10,7 +10,7 @@ class CLI(cmd.Cmd):
   controllers = {'db': None, 'img': None, 'tag': None}
   last_result = None
 
-  def __init__(self, *args, **kwargs):
+  def __init__(self, **kwargs):
     super().__init__()
     self._set_controllers(test=kwargs.get('test', False))
 
@@ -85,8 +85,8 @@ class CLI(cmd.Cmd):
   def _set_controllers(self, test=False):
     if not CLI.controllers['db']:
       CLI.controllers['db'] = DatabaseController(test=test)
-      CLI.controllers['img'] = ImageController(db=CLI.controllers['db'])
-      CLI.controllers['tag'] = TagController(db=CLI.controllers['db'])
+      CLI.controllers['img'] = ImageController(db=CLI.controllers['db'], test=test)
+      CLI.controllers['tag'] = TagController(db=CLI.controllers['db'], test=test)
 
   def _save_result(self, result):
     CLI.last_result = result

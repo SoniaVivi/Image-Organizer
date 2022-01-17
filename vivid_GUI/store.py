@@ -11,8 +11,7 @@ class Store():
            }
   subscriptions = {}
 
-  def __init__(self):
-    pass
+  @classmethod
   def dispatch(self, key, payload):
     print(f"Dispatch {payload} => {key}")
     Store.state[key] = payload
@@ -20,6 +19,7 @@ class Store():
       for subscription in Store.subscriptions[key]:
         subscription['caller'].__dict__[subscription['caller_var']] = Store.state[key]
 
+  @classmethod
   def subscribe(self, caller, key, caller_var):
     if key not in Store.subscriptions:
       Store.subscriptions[key] = []
@@ -28,5 +28,6 @@ class Store():
       print(f"Subscribe => {key} by {caller}")
       return Store.state[key]
 
+  @classmethod
   def select(self, selector):
     return selector(Store.state)

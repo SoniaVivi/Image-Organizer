@@ -41,7 +41,7 @@ class StatsButton(ToolbarButton):
          ]))
     container.add_widget(
       self.generate_modal_row(
-        [Button(text="Recheck images", on_press=self.existance_check)]))
+        [Button(text="Recheck images", on_press=self.existence_check)]))
     return container
 
   def generate_modal_row(self, widgets):
@@ -56,9 +56,9 @@ class StatsButton(ToolbarButton):
     wrapper.add_widget(Widget())
     return wrapper
 
-  def existance_check(self, *args):
-    ImageController().existance_check()
-    Store().select(lambda state: state['refresh'])()
+  def existence_check(self, *args):
+    ImageController().existence_check()
+    Store.select(lambda state: state['refresh'])()
     self.show_modal()
 
 class StatsLabel(Label):

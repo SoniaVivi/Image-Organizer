@@ -5,6 +5,7 @@ from vivid import filesearch as fs
 from pathlib import Path
 import os
 from shutil import copyfile
+from vivid.blacklist import Blacklist
 
 class TestImageController:
 
@@ -42,7 +43,7 @@ class TestImageController:
 
   def test_remove(self):
     self._reset_table()
-    func = lambda disk : self.img.remove(IMG_PATH+'temp.jpg', disk)
+    func = lambda disk : self.img.remove(IMG_PATH+'temp.jpg', db_only=disk)
     test = lambda : file_exists('temp.jpg')
 
     assert self._temp_img(func, test, True) == True
@@ -75,26 +76,58 @@ class TestImageController:
     assert records.sort() ==  ['cat2.jpg', 'cat3.jpg', 'cat4.jpg',
                                'cat1.jpg', 'cat.jpg'].sort()
 
-  def test_existance_check(self):
+  def test_existence_check(self):
     self._reset_table()
     self._temp_img(lambda *args: os.remove(f"{IMG_PATH}temp.jpg"),
-                   lambda : self.img.existance_check())
+                   lambda : self.img.existence_check())
     assert self.db.count('Image') == 0
 
     self._temp_img(lambda *args : 5,
-                   lambda : self.img.existance_check())
+                   lambda : self.img.existence_check())
     assert self.db.count('Image') == 1
+
+  def test_blacklist_image(self):
+    self._reset_table()
+
+    def wrapper(textable_type):
+      self.img.add(f"{IMG_PATH}temp.jpg")
+      self.img.remove(f"{IMG_PATH}temp.jpg", blacklist=textable_type)
+      filename = 'temp.jpg' if textable_type == 'path' else '329807932847.jpg'
+      self.img.add(f"{IMG_PATH}{filename}")
+
+    assert self._temp_img(wrapper, lambda: self.db.count('Image'), 'path') == 0
+    self._reset_table()
+    assert self._temp_img(wrapper, lambda: self.db.count('Image'), 'hash') == 0
+    self._reset_table()
+    assert self._temp_img(wrapper, lambda: self.db.count('Image'), 'all') == 0
+
+  def test_blacklist_directory(self):
+    self._reset_table()
+    self.img.blacklist_directory(IMG_PATH)
+
+    self.img.add(IMG_PATH)
+    assert self.db.count('Image') == 0
+
+    self.img.add(IMG_PATH+'cat1.jpg')
+    assert self.db.count('Image') == 0
+
+    self._reset_table()
+    self.img.blacklist_directory(IMG_PATH+'cats')
+    self.img.add(IMG_PATH)
+    assert self.db.count('Image') ==  4
 
   def _reset_table(self):
     self._remove_thumbnails()
     self.db.connection.execute("DROP TABLE Image")
     self.db.connection.execute("DROP TABLE ImageTag")
     self.db.connection.execute("DROP TABLE Tag")
+    self.db.connection.execute("DROP TABLE ImageBlacklist")
     TestImageController.db.connection = self.db._setup_database(True)
+    Blacklist.entry_node = None
 
   def _temp_img(self, func, test, arg=None, path=IMG_PATH):
     if not file_exists('temp.jpg'):
-      copyfile(f"{path}cat1.jpg", f"{path}temp.jpg")
+      copyfile(f"{IMG_PATH}cat1.jpg", f"{path}temp.jpg")
       self.img.add(f"{path}temp.jpg")
 
     try:
@@ -106,17 +139,19 @@ class TestImageController:
       if file_exists('temp.jpg'):
         os.remove(f"{path}temp.jpg")
 
-  def _temp_folder(self, func, test, arg=None, path = f"{IMG_PATH}temp"):
-    if not file_exists('temp'):
-      Path(path).mkdir
+  def _temp_folder(self, func, test, arg=None, path = f"{IMG_PATH}temp/"):
+    if not Path(path).exists():
+      Path(path).mkdir()
 
     try:
       return self._temp_img(func, test, arg, path)
     except Exception as e:
       print(e)
     finally:
-      if file_exists('temp'):
-        os.rmdir(path)
+      if Path(path).exists():
+        for x in fs.get_files(path):
+          os.remove(x)
+        Path(path).rmdir()
 
   def _remove_thumbnails(self):
     if os.path.isdir(THUMBNAIL_PATH) == True:

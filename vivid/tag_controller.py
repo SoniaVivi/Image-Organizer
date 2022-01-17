@@ -13,7 +13,7 @@ class TagController:
 
   def tag(self, image_id, tags):
     for tag_name in tags.split(' '):
-      if not self.db.exists('Image', ('id', image_id)):
+      if len(tag_name) <= 2 or not self.db.exists('Image', ('id', image_id)):
         continue
       tag = self._create(tag_name)
 

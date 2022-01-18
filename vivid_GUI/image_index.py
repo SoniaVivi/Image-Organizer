@@ -33,8 +33,11 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
     self.sort = self.config.read('image_index', 'sort')
     self.next_id = self._get_initial_id()
     self.bind(on_touch_down = self.right_click)
+    '''
+    set_cols is called here as it requires instance variables initialized
+    above.
+    '''
     self.set_cols()
-    self.fill_space()
     self.menu_options =  [
       ([
         ("Add Tag", self.tag),
@@ -62,7 +65,7 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
         lambda: len(self.selected) == 1
       )
     ]
-    Store.dispatch("update_sort", self.update_sort)
+    Store.dispatch("use_sort_from_config", self.use_sort_from_config)
     Store.dispatch("search_images", self.search_images)
     Store.dispatch("refresh", self.clear)
 
@@ -72,10 +75,11 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
 
   def fill_space(self):
     if self.sort == 'ASC' or self.sort == 'DESC':
-      max_size = self.get_last('Image')['id']
+      last_id = self.get_last('Image')['id']
+      first_id = self.get_first('Image')['id']
       while (len(self.children) / self.cols) <  Window.height / 125 and\
-            self.next_id <= max_size and\
-            self.next_id >= self.get_first('Image')['id']:
+            self.next_id <= last_id and\
+            self.next_id >= first_id:
         self.get_images()
     elif self.sort == 'search':
       max_size = len(self.search_results) - 1
@@ -108,9 +112,7 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
     last_id = next_id - 1 if self.sort == 'ASC' else next_id
     if self.sort == 'DESC':
       quantity = quantity * -1
-    query_result = self.between('Image',
-                                  next_id,
-                                  next_id + quantity)
+    query_result = self.between('Image', next_id, next_id + quantity)
     if len(query_result) < 1:
       query_result.append(None)
 
@@ -154,7 +156,7 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
       self.next_id = self._get_initial_id()
     self.fill_space()
 
-  def update_sort(self, *args):
+  def use_sort_from_config(self, *args):
     self.sort = self.config.read('image_index', 'sort')
     self.next_id = self._get_initial_id()
     self.clear()

@@ -1,14 +1,17 @@
+initial_state = {
+                 'update_sort': lambda : None,
+                 'search_images': lambda *args, **kwargs: None,
+                 'set_preview_image': lambda : None,
+                 'update_thumbnail': lambda : None,
+                 'rename_image': lambda : None,
+                 'set_index': lambda : None,
+                 'current_index_child': "",
+                 'searchbar': lambda: None,
+                 'refresh': lambda: None,
+                }
+
 class Store():
-  state = {'update_sort': lambda : None,
-           'search_images': lambda *args, **kwargs: None,
-           'set_preview_image': lambda : None,
-           'update_thumbnail': lambda : None,
-           'rename_image': lambda : None,
-           'set_index': lambda : None,
-           'current_index_child': "",
-           'searchbar': lambda: None,
-           'refresh': lambda: None,
-           }
+  state = initial_state
   subscriptions = {}
 
   @classmethod

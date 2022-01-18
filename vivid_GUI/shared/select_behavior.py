@@ -51,3 +51,6 @@ class SelectBehavior():
       if self.pressed_keys['ctrl']:
         self.pressed_keys['ctrl'] = (305, 'lctrl') not in args and\
                                     (306, 'rctrl') not in args
+  def each_selected(self):
+    for selected in self.selected:
+      yield selected()

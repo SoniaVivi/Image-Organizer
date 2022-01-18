@@ -11,6 +11,7 @@ from .context_menu.add_tag_popup import AddTagPopup
 from .context_menu.remove_tag_popup import RemoveTagPopup
 from .shared.select_behavior import SelectBehavior
 from .store import Store
+from os.path import split as splitPath
 
 class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
   img_controller = ImageController()
@@ -57,6 +58,7 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
        ],
       ),
       ([
+        ("Search Folder", self.search_folder),
         ("Rename", lambda *args: self.rename(on_disk=True)),
         ("Rename (disk only)",
           lambda *args: self.rename(False, True)),
@@ -88,6 +90,12 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
             self.next_id >= 0:
         self.get_images()
     self.get_images()
+
+  def clear(self):
+    self.clear_widgets()
+    if self.sort != 'search':
+      self.next_id = self._get_initial_id()
+    self.fill_space()
 
   def get_images(self, quantity=None):
     quantity = self.cols if not quantity else quantity
@@ -150,11 +158,12 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
     self.next_id = 0
     self.clear()
 
-  def clear(self):
-    self.clear_widgets()
-    if self.sort != 'search':
-      self.next_id = self._get_initial_id()
-    self.fill_space()
+  def search_folder(self, *args):
+    if len(self.selected) == 1:
+      current = self.selected[0]().data
+      folder_path = splitPath(current['path'])[0]
+      self.search_images(folder_path, folder=True)
+      Store.select(lambda state: state['searchbar']).text = folder_path
 
   def use_sort_from_config(self, *args):
     self.sort = self.config.read('image_index', 'sort')
@@ -173,8 +182,8 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
 
   def blacklist(self, blacklist_type='image'):
     textable_type = 'path' if blacklist_type == 'image' else 'directory'
-    for selected in self.selected:
-      path = PurePath(selected().data['path'])
+    for selected in self.each_selected():
+      path = PurePath(selected.data['path'])
       if textable_type == 'path':
         self.img_controller.blacklist_image(str(path), 'path')
       elif textable_type == 'directory':
@@ -190,25 +199,25 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
 
     if action == 'add':
       def add_tag_to_selected(name, *args):
-        for selected in self.selected:
-          self.tag_controller.tag(selected().data['id'], name)
-          selected().data['tags'] = (*selected().data['tags'], *name.split(' '))
-          selected().data['tags'] = tuple(set(selected().data['tags']))
-        self.set_preview(selected().data)
+        for selected in self.each_selected():
+          self.tag_controller.tag(selected.data['id'], name)
+          selected.data['tags'] = (*selected.data['tags'], *name.split(' '))
+          selected.data['tags'] = tuple(set(selected.data['tags']))
+        self.set_preview(selected.data)
 
       AddTagPopup(on_add=add_tag_to_selected, on_close=close).open()
 
     elif action == 'remove':
       def remove_tags(tag_names, *args):
         for tag_name in tag_names:
-          for selected in self.selected:
-            self.tag_controller.remove(selected().data['id'], tag_name)
+          for selected in self.each_selected():
+            self.tag_controller.remove(selected.data['id'], tag_name)
 
-            tags = list(selected().data['tags'])
+            tags = list(selected.data['tags'])
 
             if tag_name in tags:
               tags.remove(tag_name)
-              selected().data['tags'] = tuple(tags)
+              selected.data['tags'] = tuple(tags)
 
         self.set_preview(self.selected[-1]().data)
 
@@ -216,9 +225,9 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
       RemoveTagPopup(on_remove=remove_tags, on_close=close, tags=tags).open()
 
   def remove_image(self, keep_on_disk=True, *args):
-    for selected in self.selected:
-      self.remove(selected().data['path'], db_only=keep_on_disk)
-      self.remove_widget(selected())
+    for selected in self.each_selected():
+      self.remove(selected.data['path'], db_only=keep_on_disk)
+      self.remove_widget(selected)
     self.selected = []
     self.fill_space()
     self.set_preview()

@@ -34,6 +34,10 @@ class TestTagController:
     assert self.db.count('Tag') == 2
     assert self.db.count('ImageTag') == 2
 
+    self.tag.tag(2, 'Cat')
+    assert len(self.tag.find(['cat'])) == 2
+    assert self.tag.find(['♡meow♡', 'cat'])[0]['name'] == 'cat1'
+
   def test_all(self):
     self.tag.tag(1, 'Nyaa')
     assert self.tag.all(1) == ('cat', '♡meow♡', 'nyaa')
@@ -42,6 +46,7 @@ class TestTagController:
 
   def test_remove(self):
     self.tag.remove(1, 'cat')
+    self.tag.remove(2, 'cat')
 
     assert self.db.count('ImageTag') == 2
     assert self.db.count('Tag') == 2

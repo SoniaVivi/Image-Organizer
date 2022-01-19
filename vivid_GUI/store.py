@@ -1,5 +1,5 @@
 initial_state = {
-                 'update_sort': lambda : None,
+                 'use_sort_from_config': lambda : None,
                  'search_images': lambda *args, **kwargs: None,
                  'set_preview_image': lambda : None,
                  'update_thumbnail': lambda : None,

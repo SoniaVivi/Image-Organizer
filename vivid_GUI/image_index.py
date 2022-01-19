@@ -67,7 +67,8 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
         lambda: len(self.selected) == 1
       )
     ]
-    Store.dispatch("use_sort_from_config", self.use_sort_from_config)
+    Store.dispatch("use_sort_from_config",
+                   lambda *args: self.use_sort_from_config())
     Store.dispatch("search_images", self.search_images)
     Store.dispatch("refresh", self.clear)
 

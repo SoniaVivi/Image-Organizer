@@ -33,7 +33,7 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
     self.scroll_pos = 1.0
     self.sort = self.config.read('image_index', 'sort')
     self.next_id = self._get_initial_id()
-    self.bind(on_touch_down = self.right_click)
+    self.bind(on_touch_down=self.on_touch_down_callback)
     '''
     set_cols is called here as it requires instance variables initialized
     above.
@@ -71,6 +71,14 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
                    lambda *args: self.use_sort_from_config())
     Store.dispatch("search_images", self.search_images)
     Store.dispatch("refresh", self.clear)
+    self.current_widget = Store.subscribe(self,
+                                          'active_widget',
+                                          'current_widget')
+
+  def on_touch_down_callback(self, *args, **kwargs):
+    if self.current_widget != 'workspace':
+      Store.dispatch('active_widget', 'workspace')
+    super().right_click(*args, **kwargs)
 
   def set_cols(self, obj=None, width=Window.width):
     self.cols=int((width / 250))

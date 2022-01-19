@@ -35,6 +35,7 @@ class ToolbarModal(ModalView):
                     )
     self.add_widget(container)
     self.file_chooser.bind(on_entries_cleared=self.clear_selection)
+    self.bind(on_dismiss=lambda *args: Store.dispatch('active_widget', None))
     self.on_add = Store.subscribe(self, 'refresh', 'on_add')
 
   def add_file(self):

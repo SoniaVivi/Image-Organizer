@@ -53,6 +53,7 @@ class Toolbar(BoxLayout):
 
   def show_modal(self):
     self.modal.reset_path()
+    Store.dispatch('active_widget', 'toolbar_modal')
     self.modal.open()
 
   def toggle_index(self, *args):
@@ -60,4 +61,7 @@ class Toolbar(BoxLayout):
     self.set_child(next_child[self.current_index_child])
 
 class ToolbarSearch(TextInput):
-  pass
+  def _on_focus(self, instance, value, *largs):
+    if value:
+      Store.dispatch('active_widget', 'searchbar')
+    return super()._on_focus(instance, value, *largs)

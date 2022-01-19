@@ -18,6 +18,8 @@ class PreferencesButton(ToolbarButton):
   def show_modal(self, *args):
     modal = PreferencesModal(size_hint=(.95, .95), size_hint_max_x=960)
     modal.bind(on_dismiss=self.update_sort)
+    Store.dispatch('active_widget', 'preferences_modal')
+    modal.bind(on_dismiss=lambda *args: Store.dispatch('active_widget', None))
     modal.open()
 
 class PreferencesModal(ModalView):

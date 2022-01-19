@@ -8,6 +8,7 @@ initial_state = {
                  'current_index_child': "",
                  'searchbar': lambda: None,
                  'refresh': lambda: None,
+                 "active_widget": 'workspace'
                 }
 
 class Store():
@@ -30,6 +31,19 @@ class Store():
     if (key in Store.state):
       print(f"Subscribe => {key} by {caller}")
       return Store.state[key]
+
+  @classmethod
+  def unsubscribe(self, caller, from_key=None):
+    if from_key:
+      Store.subscriptions[from_key] =\
+        [x for x in Store.subscriptions[from_key] if x['caller'] != caller]
+      return
+    for key in Store.subscriptions:
+      keep = []
+      for subscription in Store.subscriptions[key]:
+        if subscription['caller'] != caller:
+          keep.append(subscription)
+      Store.subscriptions[key] = keep
 
   @classmethod
   def select(self, selector):

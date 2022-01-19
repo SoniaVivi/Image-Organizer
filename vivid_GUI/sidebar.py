@@ -51,6 +51,7 @@ class Sidebar(BoxLayout):
       self.add_widget(SidebarField(data[0], data[1]))
 
   def rename(self):
+    Store.dispatch('active_widget', 'sidebar')
     self.children[4].editable_field(self.img_data['name'])
 
   def set_preview(self, data=None):
@@ -141,6 +142,8 @@ class SidebarPreview(ButtonBehavior, Image):
 
     popup = ModalView(size_hint=(.9, .9))
     popup.add_widget(Image(source=self.source, size_hint=(.95, .95)))
+    Store.dispatch('active_widget', 'sidebar_modal')
+    popup.bind(on_dismiss=lambda *args: Store.dispatch('active_widget', None))
     popup.open()
 
   def open_path(self, *args):

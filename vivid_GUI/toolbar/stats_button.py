@@ -27,6 +27,9 @@ class StatsButton(ToolbarButton):
   def show_modal(self, *args):
     self.modal.clear_widgets()
     self.modal.add_widget(self.generate_stats())
+    Store.dispatch('active_widget', 'stats_modal')
+    self.modal.bind(on_dismiss=
+                    lambda *args: Store.dispatch('active_widget', None))
     self.modal.open()
 
   def generate_stats(self):

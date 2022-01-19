@@ -22,6 +22,10 @@
 
 There are options to modify how images are saved in the top of the add image modal. **None of these options makes any changes to the image file itself.**
 
+## ImageIndex Keybindings
+
+- Page-down - Show X new images and scroll to the last image if the active widget is Workspace.
+
 ## Making Selections
 
 Images can be selected by left clicking on image thumbnails.

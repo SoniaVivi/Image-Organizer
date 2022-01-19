@@ -103,6 +103,16 @@ class ExampleWidget():
     self.well_named_var = Store.subscribe(self, 'store_var', 'well_named_var')
 ```
 
+### unsubscribe(caller[object], from_key[str]=None) # => None
+
+---
+
+Removes caller from all subscriptions if from_key is falsey, otherwise unsubscribes caller from Store.state[from_key].
+
+```
+Store.unsubscribe(self, 'active_widget')
+```
+
 ### select(selector[lambda, function]) # => dict
 
 ---

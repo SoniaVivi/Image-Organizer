@@ -12,6 +12,7 @@ class ImageIndexContainer(ScrollView):
     self.bind(on_scroll_stop=self.get_pos)
     self.always_overscroll = False
     self.overscroll_effect = False
+    self.active_widget = Store.subscribe(self, 'active_widget', 'active_widget')
     Window.bind(on_keyboard=self.key_handler)
     Store.dispatch('set_index', self.set_child)
 
@@ -53,12 +54,21 @@ class ImageIndexContainer(ScrollView):
     Store.select(lambda state: state['searchbar']).text = " ".join(tags)
 
   def key_handler(self, *args):
+    if self.active_widget != 'workspace' or\
+       self.current_child[1] != 'image_index':
+      return
+    # Page down key
     if 281 in args:
-      if Store.select(lambda state: state['active_widget']) == 'workspace':
-        if self.current_child[1] == 'image_index':
-          for _ in range(0, int(self.height/125) - 1):
-            self.current_child[0].get_images()
-          self.scroll_to(self.current_child[0].children[0])
+        for _ in range(0, int(self.height/125) - 1):
+          self.current_child[0].get_images()
+        self.scroll_to(self.current_child[0].children[0])
+    # Home key
+    if 278 in args:
+      self.scroll_to(self.current_child[0].children[-1])
+    # End key
+    if 279 in args:
+      self.scroll_to(self.current_child[0].children[0])
+
 
   def on_touch_down_callback(self, *args, **kwargs):
     Store.dispatch('active_widget', 'workspace')

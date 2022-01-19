@@ -26,6 +26,10 @@ There are options to modify how images are saved in the top of the add image mod
 
 - Page-down - Show X new images and scroll to the last image if the active widget is Workspace.
 
+- Home - Scroll to the top image if the active widget is Workspace.
+
+- End - Scroll to the last image without showing new images if the active widget is Workspace.
+
 ## Making Selections
 
 Images can be selected by left clicking on image thumbnails.

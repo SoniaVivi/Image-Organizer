@@ -79,6 +79,16 @@ When on_disk is:
 
 - Otherwise, renames image only in database.
 
+### recreate_thumbnails() # => None
+
+---
+
+Overwrites and recreates all thumbnails present in the Image table.
+
+```
+img_con.recreate_thumbnails()
+```
+
 ## Deleting Images
 
 ### remove(path[str], \*\*kwargs) # => self

@@ -94,8 +94,26 @@ Tags can be searched by using the Searchbar or Tag List. Images are only present
 
 The Searchbar also supports searching by image name and folder.
 
+## Statistics Page
+
+The Statistics Page shows both statistics and buttons to verify the accuracy of the image data.
+
+Statistics Shown:
+
+- Number of Images
+
+- Number of Tags
+
+- Number of Tags on Images
+
+### Action Buttons
+
+---
+
+Recheck Images: Verifies all images exist on the disk. Any image that is not found is removed from the database and its respective thumbnail deleted.
+
+Recreate Thumbnails: Recreates all image thumbnails.
+
 ## Miscellaneous
 
 One can alter the order in which images are displayed by clicking the Preferences button and selecting a Sort Option.
-
-To verify that all images exist on disk click on the Stats button, then on the button labeled "Recheck Images". Any image that is not found on the disk is removed from the database and its thumbnail deleted.

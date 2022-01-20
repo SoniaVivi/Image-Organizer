@@ -128,9 +128,7 @@ class ImageController():
     return tuple(img_path)
 
   def existence_check(self):
-    for image in self.db.between('Image',
-                                  self.db.get_first('Image')['id'],
-                                  self.db.get_last('Image')['id']):
+    for image in self._each_image():
       path = image['path']
       if not exists(path):
         self.remove(path, db_only=True)
@@ -150,6 +148,13 @@ class ImageController():
                                               {'textable': textable,
                                               'textable_type': textable_type})
 
+  def recreate_thumbnails(self):
+    for image in self._each_image():
+      try:
+        self._create_thumbnail(image['path'], image['id'])
+      except Exception as e:
+        print(e)
+
   @classmethod
   def read_config(cls):
     ImageController.logging = Config().read('image_controller', 'logging')
@@ -161,6 +166,12 @@ class ImageController():
       print(e)
     else:
       return str(h)
+
+  def _each_image(self):
+    for image in self.db.between('Image',
+                                  self.db.get_first('Image')['id'],
+                                  self.db.get_last('Image')['id']):
+      yield image
 
   def _create_thumbnail(self, path, image_id):
     with Image.open(path) as img:

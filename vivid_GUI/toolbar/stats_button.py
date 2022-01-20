@@ -13,6 +13,7 @@ from vivid.image_controller import ImageController
 
 class StatsButton(ToolbarButton):
   db_controller = DatabaseController()
+  img = ImageController()
 
   def __init__(self, **kwargs):
     super(StatsButton, self).__init__(**kwargs)
@@ -26,13 +27,13 @@ class StatsButton(ToolbarButton):
 
   def show_modal(self, *args):
     self.modal.clear_widgets()
-    self.modal.add_widget(self.generate_stats())
+    self.modal.add_widget(self.create_children())
     Store.dispatch('active_widget', 'stats_modal')
     self.modal.bind(on_dismiss=
                     lambda *args: Store.dispatch('active_widget', None))
     self.modal.open()
 
-  def generate_stats(self):
+  def create_children(self):
     container = GridLayout(cols=1, size_hint=(.9, .9))
 
     for (stat_name, stat_getter) in self.stats.items():
@@ -42,9 +43,7 @@ class StatsButton(ToolbarButton):
                     size_hint_max_x=400,
                     isStat=True)
          ]))
-    container.add_widget(
-      self.generate_modal_row(
-        [Button(text="Recheck images", on_press=self.existence_check)]))
+    [container.add_widget(row) for row in self._create_action_buttons()]
     return container
 
   def generate_modal_row(self, widgets):
@@ -60,9 +59,22 @@ class StatsButton(ToolbarButton):
     return wrapper
 
   def existence_check(self, *args):
-    ImageController().existence_check()
+    self.img.existence_check()
     Store.select(lambda state: state['refresh'])()
     self.show_modal()
+
+  def recreate_thumbnails(self, *args):
+    self.img.recreate_thumbnails()
+    Store.select(lambda state: state['refresh'])()
+    self.show_modal()
+
+  def _create_action_buttons(self):
+    return [
+            self.generate_modal_row([Button(text="Recheck images",
+                                            on_press=self.existence_check)]),
+            self.generate_modal_row([Button(text="Recreate Thumbnails",
+                                            on_press=self.recreate_thumbnails)])
+           ]
 
 class StatsLabel(Label):
   def __init__(self, isStat=False, **kwargs):

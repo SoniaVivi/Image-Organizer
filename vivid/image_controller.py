@@ -150,6 +150,10 @@ class ImageController():
                                               {'textable': textable,
                                               'textable_type': textable_type})
 
+  @classmethod
+  def read_config(cls):
+    ImageController.logging = Config().read('image_controller', 'logging')
+
   def _get_hash(self, path):
     try:
       h = imagehash.phash(Image.open(path))

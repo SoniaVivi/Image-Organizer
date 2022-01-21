@@ -125,6 +125,7 @@ class SidebarPreview(ButtonBehavior, Image):
     super(SidebarPreview, self).__init__(**kwargs)
     self.bind(on_press=self.double_press_checker)
     self.last_press = 1
+    self.mipmap = True
 
   def double_press_checker(self, *args):
     current_time = Clock.get_time()

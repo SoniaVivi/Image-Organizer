@@ -55,6 +55,20 @@ Follow the same steps when updating and choose to overwrite all files. All thumb
 
    `python3 -m pip install -r ./requirements.txt`
 
+### Known Issue
+
+---
+
+If .gif images appear as blank in the Sidebar preview and the terminal shows
+
+`[ERROR ] [Image ] Error loading <[PATH TO IMAGE]>`
+
+the problem lies with Kivy. To remedy this, edit line 91 of `[PATH TO VENV]/lib/python3.9/site-packages/kivy/core/image/img_pil.py`
+
+From `img_ol.paste(img_tmp, (0, 0), img_tmp)` to `img_ol.paste(img_tmp, (0, 0))`
+
+Why: Pillow throws a "Bad Transparency Mask" exception when the last argument is passed and Kivy then shows a blank image.
+
 ## Generating an executable
 
 Follow the steps below "Installing from source" then run

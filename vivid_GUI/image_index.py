@@ -180,11 +180,7 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
     self.clear()
 
   def set_selected(self, data, clicked):
-    def deselect(selected):
-      selected().remove_background()
-      self.selected = [x for x in self.selected if x != clicked]
-
-    is_left_click = super().set_selected(clicked, on_ctrl_reclick=deselect)
+    is_left_click = super().set_selected(clicked)
     if is_left_click:
       self.set_preview(data)
     return is_left_click

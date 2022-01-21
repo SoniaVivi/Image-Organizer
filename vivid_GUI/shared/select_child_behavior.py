@@ -37,4 +37,3 @@ class SelectChildBehavior():
       self.last_press = 0
     else:
       self.last_press = current_time
-      Clock.schedule_once(on_single_press, .250)

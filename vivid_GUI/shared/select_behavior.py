@@ -13,7 +13,7 @@ class SelectBehavior():
     self.is_right_click = None
 
   def set_selected(self, clicked, **kwargs):
-    self.on_ctrl_reclick = kwargs.get('on_ctrl_reclick', lambda x: 0)
+    self.on_ctrl_reclick = kwargs.get('on_ctrl_reclick', self._deselect)
     if self.is_right_click:
       return
 
@@ -54,3 +54,7 @@ class SelectBehavior():
   def each_selected(self):
     for selected in self.selected:
       yield selected()
+
+  def _deselect(self, clicked):
+    clicked().remove_background()
+    self.selected = [x for x in self.selected if x != clicked]

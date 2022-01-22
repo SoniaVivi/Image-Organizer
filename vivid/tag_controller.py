@@ -2,6 +2,8 @@ from .database_controller import DatabaseController
 from collections import Counter
 
 class TagController:
+  last_search = {'find': [], 'exclude': []}
+
   def __init__(self, db=None, test=False):
     self.db = db if db else DatabaseController(test)
     self.image_table_columns = self.db.get_columns('Image')
@@ -78,6 +80,7 @@ class TagController:
             HAVING COUNT(*)>={len(search_tags)}"
 
     images = self.db.execute(sql).fetchall()
+    TagController.last_search = {'find': search_tags, 'exclude': excluded_tags}
     return tuple(map(
       lambda image: dict(zip(self.image_table_columns, image)),
       images))

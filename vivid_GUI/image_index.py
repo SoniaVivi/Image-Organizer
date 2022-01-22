@@ -223,6 +223,9 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
             if tag_name in tags:
               tags.remove(tag_name)
               selected.data['tags'] = tuple(tags)
+              if self.sort == 'search' and\
+                tag_name in self.tag_controller.last_search['find']:
+                  self.remove_widget(selected)
 
         self.set_preview(self.selected[-1]().data)
 

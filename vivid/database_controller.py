@@ -146,6 +146,14 @@ class DatabaseController():
   def to_record(self, table, record_data):
     return dict(zip(self.get_columns(table), record_data))
 
+  def next_id(self, table, value, asc=True):
+    placholder_id = -1 if asc else 2 ** 63
+    operator = '>' if asc else '<'
+    order_by = 'ASC' if asc else 'DESC'
+    sql = '''SELECT id FROM %s WHERE id %s %s ORDER BY id %s'''
+    record = self.execute(sql % (table, operator, value, order_by,)).fetchone()
+    return record[0] if record else placholder_id
+
   def _data_from_dicts(self, list_of_dicts):
     keys = []
     values = []

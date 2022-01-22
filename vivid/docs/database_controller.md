@@ -24,6 +24,8 @@ DatabaseController may never be directly used by vivid_GUI except for the follow
 
 - Listing Tags.
 
+- Getting the next id
+
 ## Creating records
 
 ### create(table[str], attributes[dict]) # => int
@@ -140,6 +142,12 @@ db.get_last('ImageTag')
 db.get_last('ImageBlacklist')
 {'id': -1, 'textable': None, 'textable_type': None}
 ```
+
+### next_id(table[str], value[int], asc[bool]=True) # => int
+
+---
+
+Returns the next id after value.
 
 ## Updating records
 

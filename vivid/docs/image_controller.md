@@ -1,3 +1,5 @@
+Last Modified: 1.5.0
+
 # class Image Controller
 
 The ImageController is the sole handler of creating, updating, and deleting images. It is also the only class that may directly utilize the Blacklist class. No other class may implement or be used to implement a method for modifying image record data without utilizing ImageController.

@@ -1,3 +1,5 @@
+Last Modified: 1.5.0
+
 ## Store
 
 The Store class serves to provide access to a nested widget's state, variables, and methods to another nested widget in a different branch or tree. Use Store if a widget requires access to another widget's state or methods instead of passing instance variables through multiple widgets.

@@ -1,3 +1,5 @@
+Last Modified: 1.5.0
+
 # class Tag Controller
 
 The TagController class is the only user that may directly modify the Tag and ImageTag table.
@@ -35,7 +37,7 @@ Value must be an image id or a tag name. If value is an int, returns all tags th
 
 ---
 
-Returns a tuple containing all images that has all the tags and none of the excluded tags. To exclude a tag put a '-' character in front of the tag name.
+Returns a tuple containing all images that has all the tags and none of the excluded tags. To exclude a tag put a '-' character in front of the tag name. Current search is saved as TagController.last_search.
 
 ```
 >>> tag_con.find(['ocean','blue'])
@@ -58,3 +60,7 @@ Removes tag from image. If tag has no entries after removal, deletes tag.
 >>> tag_con.all(1)
 ('tsunami', 'blue')
 ```
+
+## Miscellaneous
+
+Last search find() operation is saved as TagController.last_search. Do not modify this class variable directly.

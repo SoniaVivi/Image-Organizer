@@ -1,3 +1,5 @@
+Last Modified: 1.5.0
+
 ## Getting Started
 
 vivid_GUI is built using Kivy. Please refer to the [Kivy Documentation](https://kivy.org/doc/stable/gettingstarted/intro.html) for any general Kivy questions.

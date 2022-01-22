@@ -1,3 +1,5 @@
+Last Modified: 1.5.0
+
 # class Database Controller
 
 The DatabaseController class is the sole handler of CRUD operations to the database. No other class may implement a method that modifies or reads from the database without utilizing DatabaseController.

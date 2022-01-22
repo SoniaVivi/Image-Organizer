@@ -1,3 +1,5 @@
+Last Modified: 1.5.0
+
 # CLI
 
 The CLI is intended as an easily accessible user interface that supports most, if not all, operations possible with vivid classes.

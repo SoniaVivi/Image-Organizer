@@ -1,3 +1,5 @@
+Last Modified: 1.5.0
+
 # class Config
 
 Config handles user settings and persistent runtime settings.

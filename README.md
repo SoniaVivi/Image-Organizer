@@ -1,5 +1,10 @@
 # Image Organizer
 
+
+![vividPreview](https://user-images.githubusercontent.com/55420399/151720603-a6450eaa-8045-4264-b1b4-50d6b55bf278.png)
+
+Images are from [Dog API Images](https://github.com/jigsawpieces/dog-api-images)
+
 ## Features
 
 - Adding images in a top-level and/or nested directory

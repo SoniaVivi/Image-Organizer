@@ -46,7 +46,7 @@ class Toolbar(BoxLayout):
         if self.current_index_child == "tag_list":
             self.toggle_index()
         if len(instance.text) < 2:
-            Store.state["update_sort"]()
+            Store.state["refresh"]()
         else:
             Store.state["search_images"](
                 instance.text,

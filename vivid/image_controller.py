@@ -234,8 +234,8 @@ class ImageController:
 
     def _is_valid(self, path, img_hash, **kwargs):
         if (
-            not img_hash
-            or self.db.exists("Image", ("path", path))
+            self.db.exists("Image", ("path", path))
+            or not img_hash
             or (
                 kwargs.get("unique", False)
                 and self.db.exists("Image", ("hash", img_hash))

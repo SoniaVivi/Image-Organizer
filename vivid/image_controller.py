@@ -1,7 +1,6 @@
 import os
 import imagehash
 from PIL import Image
-from .database_add import RecordAdd
 from .filesearch import get_files
 from .database_controller import DatabaseController
 from .blacklist import Blacklist
@@ -9,6 +8,7 @@ from os.path import isdir, isfile, exists
 from pathlib import Path
 from .config import Config
 import random, string
+import fleep
 
 
 class ImageController:
@@ -48,17 +48,13 @@ class ImageController:
             return self
 
         name = self._generate_name(path, img_hash, **kwargs)
+        attribute_pairs = [
+            ("path", path),
+            ("name", name),
+            ("hash", img_hash),
+            self._get_image_type(path),
+        ]
 
-        record_add = RecordAdd()
-        attribute_pairs = [("path", path), ("name", name), ("hash", img_hash)]
-
-        for func in dir(record_add):
-            if (
-                func[0] != "_"
-                and func != "db_connection"
-                and callable(getattr(record_add, func))
-            ):
-                attribute_pairs.append(getattr(record_add, func)(path))
         record_id = self.db.create(
             self.table_name,
             dict(
@@ -182,6 +178,14 @@ class ImageController:
     @classmethod
     def read_config(cls):
         ImageController.logging = Config().read("image_controller", "logging")
+
+    def _get_image_type(self, path):
+        with open(path, "rb") as file:
+            info = fleep.get(file.read(128))
+        if len(info.type) != 0 and info.type[0].find("image") != -1:
+            return ("image_type", info.extension[0])
+        else:
+            return ("image_type", "")
 
     def _get_hash(self, path):
         try:

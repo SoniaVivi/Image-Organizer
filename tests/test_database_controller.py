@@ -73,3 +73,20 @@ class TestDatabaseController:
 
         self.db.create(record[0], record[1])
         assert self.db.unique("Image", ("name", "g")) == False
+
+    def test_migrate_database(self):
+        default_columns = {
+            "Image": ["id", "name", "path", "hash", "image_type"],
+            "Tag": ["id", "name"],
+            "ImageTag": ["id", "tag_id", "image_id"],
+            "ImageBlackList": ["id", "textable", "textable_type"],
+        }
+        for table in default_columns.keys():
+            assert sorted(self.db.get_columns(table)) == sorted(default_columns[table])
+
+        self.db.migrate_database(force_database_version=2)
+        for table in default_columns.keys():
+            if table != "ImageBlackList":
+                assert sorted(self.db.get_columns(table)) == sorted(
+                    default_columns[table] + ["created_at"]
+                )

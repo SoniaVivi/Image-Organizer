@@ -1,8 +1,15 @@
 import sqlite3
+from .config import Config
+from pathlib import Path
+import re
 
 
 class DatabaseController:
     DEFAULT_TABLES = ["Image", "Tag", "ImageTag", "ImageBlacklist"]
+    try:
+        db_version
+    except NameError:
+        db_version = int(Config().read("database_controller", "db_version"))
 
     def __init__(self, test=False, conn=None):
         if conn:
@@ -13,6 +20,7 @@ class DatabaseController:
             self.connection = sqlite3.connect("imagedb.db")
             for table in DatabaseController.DEFAULT_TABLES:
                 self._table_exists(table)
+            self.migrate_database()
 
     def create(self, table, attributes):
         sql = """INSERT INTO %s(%s)
@@ -177,6 +185,34 @@ class DatabaseController:
             )
         ).fetchone()
         return record[0] if record else placholder_id
+
+    def migrate_database(self, **kwargs):
+        force_version = kwargs.get("force_database_version", False)
+        db_version_target = kwargs.get("force_database_version", False)
+        force_version = not not force_version
+        if not db_version_target:
+            db_version_target = DatabaseController.db_version
+        for migration in Path("./vivid/migrations").glob("v*_*.py"):
+            version_name = int(re.search(r"(?<=v)(.+)(?=_)", migration.name)[0])
+
+            if (
+                version_name <= db_version_target and force_version
+            ) or version_name > db_version_target:
+                data = compile(
+                    open(
+                        migration,
+                        mode="rb",
+                    ).read(),
+                    filename=migration.name,
+                    mode="exec",
+                )
+                migration_data = {}
+                exec(data, globals(), migration_data), migration_data["data"]
+                for statement in migration_data["data"]["change"]:
+                    self.execute(statement)
+                    self.connection.commit()
+                Config().set("database_controller", "db_version", str(version_name))
+                DatabaseController.db_version = version_name
 
     def _data_from_dicts(self, list_of_dicts):
         keys = []

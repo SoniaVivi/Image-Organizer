@@ -1,15 +1,14 @@
 import sqlite3
-from .config import Config
 from pathlib import Path
 import re
 
 
 class DatabaseController:
-    DEFAULT_TABLES = ["Image", "Tag", "ImageTag", "ImageBlacklist"]
+    DEFAULT_TABLES = ["Image", "Tag", "ImageTag", "ImageBlacklist", "Version"]
     try:
         db_version
     except NameError:
-        db_version = int(Config().read("database_controller", "db_version"))
+        db_version = 0
 
     def __init__(self, test=False, conn=None):
         if conn:
@@ -188,10 +187,16 @@ class DatabaseController:
 
     def migrate_database(self, **kwargs):
         force_version = kwargs.get("force_database_version", False)
-        db_version_target = kwargs.get("force_database_version", False)
+        db_version_target = force_version
         force_version = not not force_version
+
         if not db_version_target:
-            db_version_target = DatabaseController.db_version
+            if DatabaseController.db_version == 0:
+                latest = self.get_last("Version")["version_number"]
+                latest = 0 if latest is None else latest
+                DatabaseController.db_version = latest
+        db_version_target = DatabaseController.db_version
+
         for migration in Path("./vivid/migrations").glob("v*_*.py"):
             version_name = int(re.search(r"(?<=v)(.+)(?=_)", migration.name)[0])
 
@@ -211,7 +216,7 @@ class DatabaseController:
                 for statement in migration_data["data"]["change"]:
                     self.execute(statement)
                     self.connection.commit()
-                Config().set("database_controller", "db_version", str(version_name))
+                self.create("Version", {"version_number": int(version_name)})
                 DatabaseController.db_version = version_name
 
     def _data_from_dicts(self, list_of_dicts):
@@ -267,6 +272,10 @@ class DatabaseController:
                     (id integer primary key,
                      textable string,
                      textable_type string)""",
+            "Version": """CREATE TABLE Version
+                    (id integer primary key,
+                     version_number integer,
+                     updated_at timestamp default current_timestamp)""",
         }
         for table in tables:
             conn.execute(table_sql[table])

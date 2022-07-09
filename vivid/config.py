@@ -9,7 +9,6 @@ class Config:
             {"sort": "ASC"},
         ),
         ("image_controller", {"logging": False}),
-        ("database_controller", {"db_version": 1}),
     )
 
     def __init__(self, path="./config"):

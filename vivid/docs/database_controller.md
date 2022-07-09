@@ -1,4 +1,4 @@
-Last Modified: 1.5.0
+Last Modified: 1.6.0
 
 # class Database Controller
 
@@ -182,6 +182,52 @@ Deletes all records matched. Returns None.
 >>> db.count('Image')
 1
 ```
+
+## Database Migrations
+
+### Writing migrations
+
+---
+
+Migrations must:
+
+- Reside in `/vivid/migrations`.
+- Be named in the following format: v[VERSION NUMBER]\_[DESCRIPTION].py
+- Contain a data variable in the global scope with the following structure.
+
+```
+data = {"change": [list of str], # List of sql statements to be executed and committed.
+        "revert": [list of str], # List of sql statements to be executed if migration is to be rolled back.
+        "logging": [str], # String to be outputted in the terminal that describes the changes committed.
+        "reversible: [bool] # True if reverting does not destroy data, else False.
+       }
+```
+
+### migrate_database(\*\*kwargs) # => None
+
+---
+
+Executes all migrations in `/vivid/migrations` if the version number is greater than the latest entry in the Version table.
+
+Keyword Arguments:
+
+- force_version[int] - Default False. Executes all migrations less than or equal to this value.
+
+## Migration Helpers
+
+To import a helper in a migration the path must be relative to `database_controller.py`.
+
+Example:
+
+To import recreate_table() in a migration, the import statement must be:
+
+`from .migrations.helpers.recreate_table import recreate_table`
+
+### recreate_table(table_name[str], create_columns[str], current_columns[str]) => list
+
+---
+
+Recreates a table, useful for adding columns with a dynamic default.
 
 ## Miscellaneous Methods
 

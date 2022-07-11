@@ -21,8 +21,6 @@ class Toolbar(BoxLayout):
         tag_list_button = ToolbarButton(text="Tag List")
         stats_button = StatsButton()
         toolbar_search = ToolbarSearch(multiline=False)
-        self.tag_checkbox = CheckBox(size_hint_max=(20, 20), group="search")
-        self.folder_checkbox = CheckBox(size_hint_max=(20, 20), group="search")
 
         file_button.bind(on_press=lambda x: self.show_modal())
         tag_list_button.bind(on_press=self.toggle_index)
@@ -34,24 +32,19 @@ class Toolbar(BoxLayout):
         self.add_widget(PreferencesButton())
         self.add_widget(Widget())
         self.add_widget(toolbar_search)
-
-        self.add_widget(self.tag_checkbox)
-        self.add_widget(Label(text="Tags", size_hint_max=(40, 20)))
-        self.add_widget(self.folder_checkbox)
-        self.add_widget(Label(text="Folder", size_hint_max=(40, 20)))
+        self.get_active_search = self._generate_checkboxes(["tags", "folder", "hash"])
         self.modal = ToolbarModal()
         Store.dispatch("searchbar", toolbar_search)
 
     def on_search(self, instance, *args):
+        search_type = self.get_active_search()
         if self.current_index_child == "tag_list":
             self.toggle_index()
         if len(instance.text) < 2:
             Store.state["refresh"]()
         else:
             Store.state["search_images"](
-                instance.text,
-                tags=self.tag_checkbox.active,
-                folder=self.folder_checkbox.active,
+                instance.text, search_type=self.get_active_search()
             )
 
     def show_modal(self):
@@ -62,6 +55,17 @@ class Toolbar(BoxLayout):
     def toggle_index(self, *args):
         next_child = {"image_index": "tag_list", "tag_list": "image_index"}
         self.set_child(next_child[self.current_index_child])
+
+    def _generate_checkboxes(self, names):
+        checkboxes = {}
+        for name in names:
+            checkboxes[name] = CheckBox(size_hint_max=(20, 20), group="search")
+        for name, widget in checkboxes.items():
+            self.add_widget(widget)
+            self.add_widget(Label(text=name.capitalize(), size_hint_max=(40, 20)))
+        return lambda: next(
+            (name for name, checkbox in checkboxes.items() if checkbox.active), "name"
+        )
 
 
 class ToolbarSearch(TextInput):

@@ -66,6 +66,7 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
             ),
             (
                 [
+                    ("Search Hash", self.search_hash),
                     ("Search Folder", self.search_folder),
                     ("Rename", lambda *args: self.rename(on_disk=True)),
                     ("Rename (disk only)", lambda *args: self.rename(False, True)),
@@ -162,21 +163,25 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
             last_id = i + 1
         self.next_id = last_id
 
-    def search_images(self, search_string=None, tags=False, folder=False):
+    def search_images(self, search_string=None, search_type="name"):
         self.sort = "search"
-        if tags:
+        if search_type == "tags":
             self.search_results = list(
                 self.tag_controller.find(search_string.split(" "))
             )
-        elif folder:
+        elif search_type == "folder":
             self.search_results = self.db_controller.search(
                 "Image", {"path": search_string}
             )
-        else:
+        elif search_type == "name":
             self.search_results = self.db_controller.search(
                 "Image", {"name": search_string}
             )
-        if tags or folder:
+        elif search_type == "hash":
+            self.search_results = self.db_controller.search(
+                "Image", {"hash": search_string}
+            )
+        if search_type in ["tags", "folder", "hash"]:
             self.search_results.sort(key=lambda img: img["id"])
         self.next_id = 0
         self.clear()
@@ -185,8 +190,13 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
         if len(self.selected) == 1:
             current = self.selected[0]().data
             folder_path = splitPath(current["path"])[0]
-            self.search_images(folder_path, folder=True)
-            Store.select(lambda state: state["searchbar"]).text = folder_path
+            self.search_images(folder_path, search_type="folder")
+            self._set_search_text(folder_path)
+
+    def search_hash(self, *args):
+        image_hash = self.selected[0]().data["hash"]
+        self.search_images(search_string=image_hash, search_type="hash")
+        self._set_search_text(image_hash)
 
     def use_sort_from_config(self, *args):
         self.sort = self.config.read("image_index", "sort")
@@ -260,6 +270,9 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
 
     def rename(self, in_database=True, on_disk=False):
         self.rename_image(self.selected[0], in_database, on_disk)
+
+    def _set_search_text(self, text):
+        Store.select(lambda state: state["searchbar"]).text = text
 
     def _get_initial_id(self):
         return {

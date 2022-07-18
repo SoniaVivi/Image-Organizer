@@ -1,3 +1,6 @@
+from vivid.config import Config
+
+
 initial_state = {
     "use_sort_from_config": lambda: None,
     "search_images": lambda *args, **kwargs: None,

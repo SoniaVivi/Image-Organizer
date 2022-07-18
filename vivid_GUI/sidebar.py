@@ -11,6 +11,7 @@ from kivy.clock import Clock
 from datetime import datetime, timedelta
 from platform import system
 import os
+from vivid.config import Config
 from vivid.database_controller import DatabaseController
 from vivid.image_controller import ImageController
 from vivid.tag_controller import TagController
@@ -156,7 +157,9 @@ class SidebarPreview(ButtonBehavior, Image):
         if system() == "Windows":
             os.startfile(self.source)
         else:
-            os.system(f'(nohup nautilus --gtk-no-debug=FLAGS "{self.source}") &')
+            os.system(
+                f"""({Config().read('sidebar', 'on_double_click')} "{self.source}") &"""
+            )
 
 
 # Create separate class for styling in vivid.kv

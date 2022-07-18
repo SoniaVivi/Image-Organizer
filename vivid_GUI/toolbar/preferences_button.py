@@ -5,6 +5,7 @@ from kivy.uix.label import Label
 from kivy.uix.widget import Widget
 from vivid.image_controller import ImageController
 from .toolbar_button import ToolbarButton
+from kivy.uix.textinput import TextInput
 from vivid.config import Config
 from ..store import Store
 
@@ -31,10 +32,16 @@ class PreferencesModal(ModalView):
         super(PreferencesModal, self).__init__(**kwargs)
         self.current_sort = Config().read("image_index", "sort")
         self.logging_value = Config().read("image_controller", "logging")
+        self.sidebar_on_double_click = Config().read("sidebar", "on_double_click")
         self.wrapper = GridLayout(cols=3)
         self.max_size = [150, 300]
         self.wrapper.add_widget(self.create_sort_option())
         self.wrapper.add_widget(self.create_logging_option())
+        self.wrapper.add_widget(Widget())
+        [self.wrapper.add_widget(Widget(size_hint_max_y=60)) for _ in range(3)]
+        sidebar_widgets = self.create_sidebar_on_double_click_option()
+        self.wrapper.add_widget(sidebar_widgets[0])
+        self.wrapper.add_widget(sidebar_widgets[1])
         self.add_widget(self.wrapper)
 
     def create_sort_option(self):
@@ -65,6 +72,20 @@ class PreferencesModal(ModalView):
                 )
             )
         return container
+
+    def create_sidebar_on_double_click_option(self):
+        container = self._create_option_container(
+            label="Run command on double click",
+        )
+        container.padding = (120, 0)
+        text_box = TextInput(text=self.sidebar_on_double_click, multiline=False)
+        text_box.size_hint_max_y = 30
+        text_box.bind(
+            on_text_validate=lambda widget: Config().set(
+                "sidebar", "on_double_click", widget.text
+            )
+        )
+        return [container, text_box]
 
     def set_logging(self, widget):
         self.config.set(

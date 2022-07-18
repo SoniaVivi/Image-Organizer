@@ -9,6 +9,7 @@ class Config:
             {"sort": "ASC"},
         ),
         ("image_controller", {"logging": False}),
+        ("sidebar", {"on_double_click": "nohup nautilus --gtk-no-debug=FLAGS"}),
     )
 
     def __init__(self, path="./config"):
@@ -36,7 +37,6 @@ class Config:
         for section_data in Config.DEFAULTS:
             if section_data[0] not in parser:
                 parser[section_data[0]] = section_data[1]
-            print(section_data)
             for attribute_name, value in section_data[1].items():
                 if attribute_name not in parser[section_data[0]]:
                     parser[section_data[0]][attribute_name] = value

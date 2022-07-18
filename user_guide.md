@@ -1,3 +1,5 @@
+Last Modified: 1.6.0
+
 # User Guide
 
 ## Terminology:
@@ -78,7 +80,11 @@ Sidebar image preview operations:
 
 - Click - Open a large preview.
 
-- Double click - Open in nautilus (linux) or opens file (windows).
+- Double click:
+
+  - Linux - Run command on double click. By default, opens in Nautilus. Can be changed in Preferences.
+
+  - Windows - Opens file.
 
 ## Searching
 
@@ -88,11 +94,11 @@ Sidebar image preview operations:
 
 Tags can be searched by using the Searchbar or Tag List. Images are only presented if they have all of the searched tags and no excluded tag. To exclude a tag put a "-" in front of the tag name when using the Searchbar.
 
-### Folders and names
+### Folders, names, and hashes
 
 ---
 
-The Searchbar also supports searching by image name and folder.
+The Searchbar also supports searching by image name, folder, and image hash.
 
 ## Statistics Page
 

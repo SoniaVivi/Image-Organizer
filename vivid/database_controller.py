@@ -195,14 +195,16 @@ class DatabaseController:
                 latest = self.get_last("Version")["version_number"]
                 latest = 0 if latest is None else latest
                 DatabaseController.db_version = latest
-        db_version_target = DatabaseController.db_version
+        db_version_target = (
+            DatabaseController.db_version if not force_version else db_version_target
+        )
 
         for migration in Path("./vivid/migrations").glob("v*_*.py"):
             version_name = int(re.search(r"(?<=v)(.+)(?=_)", migration.name)[0])
 
-            if (
-                version_name <= db_version_target and force_version
-            ) or version_name > db_version_target:
+            if (version_name <= db_version_target and force_version) or (
+                version_name > db_version_target and not force_version
+            ):
                 data = compile(
                     open(
                         migration,

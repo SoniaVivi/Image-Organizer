@@ -199,7 +199,7 @@ Migrations must:
 data = {"change": [list of str], # List of sql statements to be executed and committed.
         "revert": [list of str], # List of sql statements to be executed if migration is to be rolled back.
         "logging": [str], # String to be outputted in the terminal that describes the changes committed.
-        "reversible: [bool] # True if reverting does not destroy data, else False.
+        "reversible: [bool] # True if migrating destroys data, else False.
        }
 ```
 

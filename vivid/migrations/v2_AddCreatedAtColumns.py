@@ -28,5 +28,5 @@ data = {
         "ALTER TABLE ImageTag DROP COLUMN created_at;",
     ],
     "logging": "Added created_at column to tables: Image, Tag, ImageTag",
-    "reversible": False,
+    "reversible": True,
 }

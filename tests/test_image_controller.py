@@ -135,6 +135,22 @@ class TestImageController:
         self.img.add(IMG_PATH)
         assert self.db.count("Image") == 4
 
+    def test_add_metadata(self):
+        self.db.migrate_database()
+
+        self.img.add_metadata(1, {"source": "example.com"})
+        assert self.db.find_by("Image", {"id": 1})["source"] == "example.com"
+
+        self.img.add_metadata([1, 2], {"creator": "test_user"})
+        assert self.db.find_by("Image", {"id": 1})["creator"] == "test_user"
+        assert self.db.find_by("Image", {"id": 2})["creator"] == "test_user"
+
+        self.img.add_metadata([2, 3], {"creator": "sudo", "source": "example.com"})
+        assert self.db.find_by("Image", {"id": 2})["creator"] == "sudo"
+        assert self.db.find_by("Image", {"id": 2})["source"] == "example.com"
+        assert self.db.find_by("Image", {"id": 3})["creator"] == "sudo"
+        assert self.db.find_by("Image", {"id": 3})["source"] == "example.com"
+
     def _reset_table(self):
         self._remove_thumbnails()
         self.db.connection.execute("DROP TABLE Image")

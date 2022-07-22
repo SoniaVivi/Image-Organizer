@@ -175,6 +175,16 @@ class ImageController:
             except Exception as e:
                 print(e)
 
+    def add_metadata(self, img_ids, metadata):
+        if type(img_ids) != list:
+            img_ids = [img_ids]
+        for img_id in img_ids:
+            self.db.update(
+                "Image",
+                img_id,
+                [(attribute, value) for attribute, value in metadata.items()],
+            )
+
     @classmethod
     def read_config(cls):
         ImageController.logging = Config().read("image_controller", "logging")

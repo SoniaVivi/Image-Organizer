@@ -32,11 +32,13 @@ class SelectChildBehavior:
             self.remove_background()
             self.add_background(False)
 
-    def double_press_checker(self, on_single_press, on_double_press, *args):
+    def double_press_checker(self, on_single_press=None, on_double_press=None, *args):
         current_time = Clock.get_time()
 
         if (current_time - self.last_press) <= 0.250:
             on_double_press()
             self.last_press = 0
         else:
+            if on_single_press:
+                Clock.schedule_once(on_single_press, 0.250)
             self.last_press = current_time

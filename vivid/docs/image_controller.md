@@ -91,6 +91,14 @@ Overwrites and recreates all thumbnails present in the Image table.
 img_con.recreate_thumbnails()
 ```
 
+### update_metadata(img_ids[list, int], metadata[dict]) # => None
+
+---
+
+Updates values in specified images.
+
+Use only if no method directly corresponds to the respective attribute.
+
 ## Deleting Images
 
 ### remove(path[str], \*\*kwargs) # => self

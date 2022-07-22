@@ -175,7 +175,7 @@ class ImageController:
             except Exception as e:
                 print(e)
 
-    def add_metadata(self, img_ids, metadata):
+    def update_metadata(self, img_ids, metadata):
         if type(img_ids) != list:
             img_ids = [img_ids]
         for img_id in img_ids:

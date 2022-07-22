@@ -15,6 +15,7 @@ from vivid.config import Config
 from vivid.database_controller import DatabaseController
 from vivid.image_controller import ImageController
 from vivid.tag_controller import TagController
+from vivid_GUI.shared.select_child_behavior import SelectChildBehavior
 from .store import Store
 
 
@@ -126,22 +127,16 @@ class EditField(TextInput):
             self.update_field()
 
 
-class SidebarPreview(ButtonBehavior, Image):
+class SidebarPreview(ButtonBehavior, Image, SelectChildBehavior):
     def __init__(self, **kwargs):
         super(SidebarPreview, self).__init__(**kwargs)
-        self.bind(on_press=self.double_press_checker)
         self.last_press = 1
         self.mipmap = True
-
-    def double_press_checker(self, *args):
-        current_time = Clock.get_time()
-
-        if (current_time - self.last_press) <= 0.250:
-            self.open_path()
-            self.last_press = 0
-        else:
-            self.last_press = current_time
-            Clock.schedule_once(self.single_press, 0.250)
+        self.bind(
+            on_press=lambda *args: self.double_press_checker(
+                on_double_press=self.open_path, on_single_press=self.single_press
+            )
+        )
 
     def single_press(self, *args):
         if not self.last_press:

@@ -52,7 +52,9 @@ class ImageIndexContainer(ScrollView):
 
     def search_from_tag_list(self, tags=[]):
         self.set_child()
-        Store.select(lambda state: state["search_images"])(" ".join(tags), True)
+        Store.select(lambda state: state["search_images"])(
+            search_string=" ".join(tags), search_type="tags"
+        )
         Store.select(lambda state: state["searchbar"]).text = " ".join(tags)
 
     def key_handler(self, *args):

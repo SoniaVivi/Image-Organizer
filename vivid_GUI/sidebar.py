@@ -23,48 +23,45 @@ class Sidebar(BoxLayout):
     img_controller = ImageController()
     db_controller = DatabaseController()
     tag_controller = TagController()
+    FIELD_NAMES = {"image_type": "Format", "created_at": "Added on"}
 
     def __init__(self, **kwargs):
         super(Sidebar, self).__init__(**kwargs)
-        self.img_data = self.empty_data()
         self.id = "sidebar"
-        self.update_children()
         self.last_update = datetime.now()
         Store.dispatch("set_preview_image", self.set_preview)
         Store.dispatch("rename_image", self.rename_image)
         Store.dispatch("update_thumbnail", self.update_thumbnail)
 
-    def empty_data(self):
-        return {"name": "", "path": "", "hash": "", "image_type": "", "tags": ""}
-
-    def update_children(self):
+    def set_preview(self, data):
         self.clear_widgets()
-        if not "tags" in self.img_data:
-            self.img_data["tags"] = ""
+        self.add_widget(SidebarPreview(source=data["path"]))
+        self.field_data = {}
 
-        field_data = [
-            ("Name", self.img_data["name"]),
-            ("Path", self.img_data["path"]),
-            ("Hash", self.img_data["hash"]),
-            ("Format", self.img_data["image_type"]),
-            ("Tags", ", ".join(self.img_data["tags"])),
-        ]
-        self.add_widget(SidebarPreview(source=self.img_data["path"]))
-        for data in field_data:
-            self.add_widget(SidebarField(data[0], data[1]))
+        for attribute_name, value in data.items():
+            field_name = None
+            field_value = str(value)
+            if attribute_name == "tags":
+                field_value = ", ".join(value)
 
-    def rename(self):
-        Store.dispatch("active_widget", "sidebar")
-        self.children[4].editable_field(self.img_data["name"])
+            if attribute_name in self.FIELD_NAMES:
+                field_name = self.FIELD_NAMES[attribute_name]
+            else:
+                field_name = attribute_name.capitalize()
 
-    def set_preview(self, data=None):
-        self.img_data = data if data else self.empty_data()
-        self.update_children()
+            self.field_data[attribute_name] = {
+                "widget": SidebarField(field_name, field_value),
+                "value": value,
+            }
+            self.add_widget(self.field_data[attribute_name]["widget"])
 
     def rename_image(self, thumbnail, in_database, on_disk):
         self.rename_properties = {"in_database": in_database, "on_disk": on_disk}
         self.thumbnail = thumbnail
-        self.rename()
+        Store.dispatch("active_widget", "sidebar")
+        self.field_data["name"]["widget"].editable_field(
+            self.field_data["name"]["value"]
+        )
 
     def update_thumbnail(self, data):
         time = datetime.now()

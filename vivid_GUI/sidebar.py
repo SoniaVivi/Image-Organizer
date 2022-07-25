@@ -33,8 +33,10 @@ class Sidebar(BoxLayout):
         Store.dispatch("rename_image", self.rename_image)
         Store.dispatch("update_thumbnail", self.update_thumbnail)
 
-    def set_preview(self, data):
+    def set_preview(self, data=None):
         self.clear_widgets()
+        if not data:
+            return
         self.add_widget(SidebarPreview(source=data["path"]))
         self.field_data = {}
 

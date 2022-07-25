@@ -37,7 +37,9 @@ class SelectBehavior:
 
         for i in range(first_index, second_index, step):
             self.children[i].add_background()
-            self.selected.append(weakref.ref(self.children[i]))
+            new_ref = weakref.ref(self.children[i])
+            if new_ref not in self.selected:
+                self.selected.append(new_ref)
 
     def pressed_key(self, *args):
         self.pressed_keys["shift"] = (304, "shift") in args

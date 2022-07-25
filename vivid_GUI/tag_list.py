@@ -55,7 +55,7 @@ class TagList(GridLayout, SelectBehavior, ContextMenuBehavior):
                 TagListChild(
                     color=self.col_color,
                     text=tag["name"],
-                    press=super().set_selected,
+                    set_as_selected=super().set_selected,
                     double_press=self.search,
                     set_row_height=self.set_row_height,
                     position=i + 1,
@@ -96,28 +96,25 @@ class TagList(GridLayout, SelectBehavior, ContextMenuBehavior):
             self.children[-i].set_border(row_height)
 
     def search_tags(self):
-        self.search([tag().text for tag in self.selected])
+        self.search([tag.text for tag in self.each_selected()])
 
 
 class TagListChild(ButtonBehavior, Label, SelectChildBehavior):
-    def __init__(self, color, press, double_press, set_row_height, position, **kwargs):
+    def __init__(
+        self, color, set_as_selected, double_press, set_row_height, position, **kwargs
+    ):
         super(TagListChild, self).__init__(**kwargs)
-        self.bind(
-            on_press=lambda *args: self.on_press_callback(
-                lambda: double_press([self.text])
-            )
-        )
+        self.bind(on_press=lambda *args: self.on_press_callback(double_press))
         self.bind(width=lambda *args: self.set_border())
         self.bind(height=lambda *args: self.set_border())
         self.col_color = color
-        self.press = press
-        self.bind(on_press=self.select)
         self.highlight_size_increment = 10
         self.bind(
             texture_size=lambda *args: self.height_callback(
                 set_row_height, position, *args
             )
         )
+        self.set_as_selected = set_as_selected
 
     def set_border(self, row_height=None):
         self.canvas.before.remove_group("border")
@@ -133,12 +130,10 @@ class TagListChild(ButtonBehavior, Label, SelectChildBehavior):
             if row_height:
                 self.text_size = (self.width, row_height + 10)
 
-    def select(self, *args):
-        if self.press(weakref.ref(self)):
-            super().add_background()
-
     def on_press_callback(self, on_double_press):
-        self.double_press_checker(self.select, on_double_press)
+        if self.set_as_selected(weakref.ref(self)):
+            super().add_background()
+        self.double_press_checker(None, lambda: on_double_press([self.text]))
 
     def height_callback(self, set_height, position, texture=None, *args):
         if texture:

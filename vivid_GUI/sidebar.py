@@ -28,10 +28,8 @@ class Sidebar(BoxLayout):
     def __init__(self, **kwargs):
         super(Sidebar, self).__init__(**kwargs)
         self.id = "sidebar"
-        self.last_update = datetime.now()
         Store.dispatch("set_preview_image", self.set_preview)
-        Store.dispatch("rename_image", self.rename_image)
-        Store.dispatch("update_thumbnail", self.update_thumbnail)
+        Store.dispatch("edit_field", self.edit_field)
 
     def set_preview(self, data=None):
         self.clear_widgets()
@@ -57,36 +55,11 @@ class Sidebar(BoxLayout):
             }
             self.add_widget(self.field_data[attribute_name]["widget"])
 
-    def rename_image(self, thumbnail, in_database, on_disk):
-        self.rename_properties = {"in_database": in_database, "on_disk": on_disk}
-        self.thumbnail = thumbnail
+    def edit_field(self, attribute_name, initial_text, modification_function):
         Store.dispatch("active_widget", "sidebar")
-        self.field_data["name"]["widget"].editable_field(
-            self.field_data["name"]["value"]
+        self.field_data[attribute_name]["widget"].editable_field(
+            initial_text, modification_function
         )
-
-    def update_thumbnail(self, data):
-        time = datetime.now()
-        if time - self.last_update < timedelta(seconds=1):
-            return
-
-        self.last_update = time
-        new_path = (
-            "path",
-            self.thumbnail().data["path"],
-        )
-
-        if "name" in data:
-            new_path = self.img_controller.rename(
-                new_path[1],
-                data["name"],
-                self.rename_properties["on_disk"],
-                self.rename_properties["in_database"],
-            )
-        updated_data = self.db_controller.find_by("Image", new_path)
-        updated_data["tags"] = self.tag_controller.all(updated_data["id"])
-        self.thumbnail().update(updated_data)
-        self.set_preview(updated_data)
 
 
 class SidebarField(BoxLayout):
@@ -100,27 +73,37 @@ class SidebarField(BoxLayout):
         self.add_widget(self.name_field)
         self.add_widget(self.value_field)
 
-    def editable_field(self, text):
+    def editable_field(self, text, update_func):
         self.remove_widget(self.value_field)
-        self.value_field = EditField(text=text, size_hint_min_y=32, root=self.app.root)
+        self.value_field = EditField(
+            text=text, size_hint_min_y=32, root=self.app.root, update_field=update_func
+        )
         self.size_hint_max_y = 32
         self.add_widget(self.value_field)
 
 
 class EditField(TextInput):
-    def __init__(self, root, **kwargs):
+    def __init__(self, root, update_field, **kwargs):
         super(EditField, self).__init__(**kwargs)
         self.root = root
         self.keyboard = Window.request_keyboard(lambda *args: None, self)
         self.keyboard.bind(on_key_up=self.pressed_key)
         self.multiline = False
-
-    def update_field(self):
-        Store.select(lambda state: state["update_thumbnail"])({"name": self.text})
+        self.update_field = update_field
+        self.last_update = datetime.now()
+        self.enter_count = 0
+        self.initial_text = self.text
 
     def pressed_key(self, *args):
-        if (13, "enter") in args:
-            self.update_field()
+        # Kivy frequently registers keys to be pressed 2+ times causing the function
+        # to be fired multiple times. First with the intended text and then with the initial text.
+        if (13, "enter") in args and self.initial_text != self.text:
+            time = datetime.now()
+            if time - self.last_update < timedelta(seconds=1) or self.enter_count >= 1:
+                return
+            self.last_update = datetime.now()
+            self.enter_count += 1
+            self.update_field(self.text)
 
 
 class SidebarPreview(ButtonBehavior, Image, SelectChildBehavior):

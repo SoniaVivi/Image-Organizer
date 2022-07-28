@@ -29,7 +29,6 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
         super(ImageIndex, self).__init__(**kwargs)
         self.bind(width=self.set_cols)
         self.set_preview = Store.subscribe(self, "set_preview_image", "set_preview")
-        self.rename_image = Store.subscribe(self, "rename_image", "rename_image")
         self.tag_popup = False
         self.scroll_pos = 1.0
         self.sort = self.config.read("image_index", "sort")
@@ -68,9 +67,18 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
                 [
                     ("Search Hash", self.search_hash),
                     ("Search Folder", self.search_folder),
-                    ("Rename", lambda *args: self.rename(on_disk=True)),
-                    ("Rename (disk only)", lambda *args: self.rename(False, True)),
-                    ("Rename (database only)", self.rename),
+                    (
+                        "Rename",
+                        lambda *args: self.rename(on_disk=True, in_database=True),
+                    ),
+                    (
+                        "Rename (disk only)",
+                        lambda *args: self.rename(in_database=False, on_disk=True),
+                    ),
+                    (
+                        "Rename (database only)",
+                        lambda *args: self.rename(in_database=True, on_disk=False),
+                    ),
                 ],
                 lambda: len(self.selected) == 1,
             ),
@@ -268,8 +276,29 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
         self.fill_space()
         self.set_preview()
 
-    def rename(self, in_database=True, on_disk=False):
-        self.rename_image(self.selected[0], in_database, on_disk)
+    def rename(self, in_database, on_disk, *args):
+        selected_thumbnail = self.selected[0]()
+
+        def rename_func(new_name):
+            nonlocal in_database
+            nonlocal on_disk
+            data = selected_thumbnail.data
+            self.img_controller.rename(
+                data["path"],
+                new_name,
+                in_db=in_database,
+                on_disk=on_disk,
+            )
+            updated_data = self.db_controller.find_by("Image", {"id": data["id"]})
+            updated_data["tags"] = self.tag_controller.all(updated_data["id"])
+            selected_thumbnail.update(updated_data)
+            self.set_preview(updated_data)
+
+        self.rename_image = Store.select(
+            lambda state: state["edit_field"](
+                "name", selected_thumbnail.data["name"], rename_func
+            )
+        )
 
     def _set_search_text(self, text):
         Store.select(lambda state: state["searchbar"]).text = text

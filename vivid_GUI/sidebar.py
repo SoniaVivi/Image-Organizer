@@ -76,7 +76,10 @@ class SidebarField(BoxLayout):
     def editable_field(self, text, update_func):
         self.remove_widget(self.value_field)
         self.value_field = EditField(
-            text=text, size_hint_min_y=32, root=self.app.root, update_field=update_func
+            text=str(text),
+            size_hint_min_y=32,
+            root=self.app.root,
+            update_field=update_func,
         )
         self.size_hint_max_y = 32
         self.add_widget(self.value_field)

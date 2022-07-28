@@ -43,6 +43,14 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
             (
                 [
                     ("Add Tag", self.tag),
+                    (
+                        "Update Creator",
+                        lambda: self.update_metadata("creator"),
+                    ),
+                    (
+                        "Update Source",
+                        lambda: self.update_metadata("source"),
+                    ),
                     ("Remove Tag", lambda *args: self.tag(action="remove")),
                     ("Remove", self.remove_image),
                     (
@@ -294,9 +302,28 @@ class ImageIndex(GridLayout, SelectBehavior, ContextMenuBehavior):
             selected_thumbnail.update(updated_data)
             self.set_preview(updated_data)
 
-        self.rename_image = Store.select(
+        Store.select(
             lambda state: state["edit_field"](
                 "name", selected_thumbnail.data["name"], rename_func
+            )
+        )
+
+    def update_metadata(self, attribute_name):
+        def update_func(new_value):
+            nonlocal attribute_name
+            self.img_controller.update_metadata(
+                [selected.data["id"] for selected in self.each_selected()],
+                {attribute_name: new_value},
+            )
+            for selected in self.each_selected():
+                selected.update(
+                    self.db_controller.find_by("Image", {"id": selected.data["id"]})
+                )
+            self.set_preview(self.last_selected().data)
+
+        Store.select(
+            lambda state: state["edit_field"](
+                attribute_name, self.last_selected().data[attribute_name], update_func
             )
         )
 

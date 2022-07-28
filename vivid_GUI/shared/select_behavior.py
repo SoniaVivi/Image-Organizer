@@ -41,6 +41,12 @@ class SelectBehavior:
             if new_ref not in self.selected:
                 self.selected.append(new_ref)
 
+    def first_selected(self):
+        return self.selected[0]()
+
+    def last_selected(self):
+        return self.selected[-1]()
+
     def pressed_key(self, *args):
         self.pressed_keys["shift"] = (304, "shift") in args
         self.pressed_keys["ctrl"] = (305, "lctrl") in args or (306, "rctrl") in args

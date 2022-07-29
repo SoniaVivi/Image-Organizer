@@ -1,8 +1,8 @@
 from .image_index import ImageIndex
 from kivy.uix.scrollview import ScrollView
 from kivy.core.window import Window
-from .tag_list import TagList
-from .store import Store
+from ..tag_list import TagList
+from ..store import Store
 
 
 class ImageIndexContainer(ScrollView):

@@ -1,3 +1,4 @@
+from vivid.config import Config
 from ..store import Store
 from vivid_GUI.context_menu.context_menu_behavior import ContextMenuBehavior
 from os.path import split as splitPath
@@ -11,42 +12,22 @@ class ImageIndexContextMenu(ContextMenuBehavior, SelectBehavior):
     def __init__(self, **kwargs):
         super(ImageIndexContextMenu, self).__init__(**kwargs)
         self.set_preview = Store.subscribe(self, "set_preview_image", "set_preview")
+        self.active_menu_options = {}
+        self.read_config()
+        self.set_menu_options()
+
+    def set_menu_options(self):
+        # [((options,), [validation])]
         self.menu_options = [
             (
                 [
                     ("Add Tag", self.tag),
                     ("Remove Tag", lambda *args: self.tag(action="remove")),
-                    (
-                        "Update Creator",
-                        lambda: self.update_metadata("creator"),
-                    ),
-                    (
-                        "Update Source",
-                        lambda: self.update_metadata("source"),
-                    ),
-                    ("Remove", self.remove_image),
-                    (
-                        "Remove and Blacklist",
-                        lambda: (self.blacklist(), self.remove_image()),
-                    ),
-                    (
-                        "Remove and Blacklist Parent Directory",
-                        lambda: (self.blacklist("directory"), self.remove_image()),
-                    ),
-                    ("Delete", lambda *args: self.remove_image(keep_on_disk=False)),
-                    (
-                        "Delete and Blacklist Parent Directory",
-                        lambda: (
-                            self.blacklist("directory"),
-                            self.remove_image(keep_on_disk=False),
-                        ),
-                    ),
                 ],
+                self.active_menu_options["image_tagging"],
             ),
             (
                 [
-                    ("Search Hash", self.search_hash),
-                    ("Search Folder", self.search_folder),
                     (
                         "Rename",
                         lambda *args: self.rename(on_disk=True, in_database=True),
@@ -60,9 +41,84 @@ class ImageIndexContextMenu(ContextMenuBehavior, SelectBehavior):
                         lambda *args: self.rename(in_database=True, on_disk=False),
                     ),
                 ],
-                lambda: len(self.selected) == 1,
+                lambda: self.active_menu_options and len(self.selected) == 1,
+            ),
+            (
+                [
+                    (
+                        "Update Creator",
+                        lambda: self.update_metadata("creator"),
+                    ),
+                ],
+                self.active_menu_options["creator_updating"],
+            ),
+            (
+                [
+                    (
+                        "Update Source",
+                        lambda: self.update_metadata("source"),
+                    ),
+                ],
+                self.active_menu_options["source_updating"],
+            ),
+            (
+                [
+                    ("Search Hash", self.search_hash),
+                ],
+                lambda: len(self.selected) == 1
+                and self.active_menu_options["hash_searching"],
+            ),
+            (
+                [
+                    ("Search Folder", self.search_folder),
+                ],
+                lambda: len(self.selected) == 1
+                and self.active_menu_options["folder_searching"],
+            ),
+            (
+                [
+                    ("Remove", self.remove_image),
+                ],
+                self.active_menu_options["image_removing"],
+            ),
+            (
+                [
+                    (
+                        "Remove and Blacklist",
+                        lambda: (self.blacklist(), self.remove_image()),
+                    ),
+                    (
+                        "Remove and Blacklist Parent Directory",
+                        lambda: (self.blacklist("directory"), self.remove_image()),
+                    ),
+                ],
+                lambda: self.active_menu_options["image_blacklisting"]
+                and self.active_menu_options["image_removing"],
+            ),
+            (
+                [
+                    ("Delete", lambda *args: self.remove_image(keep_on_disk=False)),
+                ],
+                self.active_menu_options["image_deleting"],
+            ),
+            (
+                [
+                    (
+                        "Delete and Blacklist Parent Directory",
+                        lambda: (
+                            self.blacklist("directory"),
+                            self.remove_image(keep_on_disk=False),
+                        ),
+                    ),
+                ],
+                lambda: self.active_menu_options["image_blacklisting"]
+                and self.active_menu_options["image_deleting"],
             ),
         ]
+
+    def read_config(self):
+        for key, value in Config().section_items("image_index_context_menu").items():
+            self.active_menu_options[key] = value == "True"
 
     def search_folder(self, *args):
         if len(self.selected) == 1:

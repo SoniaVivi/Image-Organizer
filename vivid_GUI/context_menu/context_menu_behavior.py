@@ -1,3 +1,4 @@
+from pyclbr import Function
 from .context_menu import ContextMenu
 
 
@@ -18,8 +19,11 @@ class ContextMenuBehavior:
         self.is_right_click = touch.button == "right"
         if self.is_right_click and len(self.selected):
             for item_data in self.menu_options:
-                if len(item_data) == 2 and not item_data[1]():
-                    continue
+                if len(item_data) == 2:
+                    if not item_data[1] or (
+                        (callable(item_data[1]) and not item_data[1]())
+                    ):
+                        continue
 
                 for item in item_data[0]:
                     options.append(item)

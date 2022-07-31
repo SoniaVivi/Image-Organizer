@@ -8,6 +8,20 @@ class Config:
             "image_index",
             {"sort": "ASC"},
         ),
+        (
+            "image_index_context_menu",
+            {
+                "image_tagging": True,
+                "image_renaming": True,
+                "image_removing": True,
+                "image_deleting": False,
+                "image_blacklisting": False,
+                "creator_updating": True,
+                "source_updating": True,
+                "folder_searching": True,
+                "hash_searching": True,
+            },
+        ),
         ("image_controller", {"logging": False}),
         ("sidebar", {"on_double_click": "nohup nautilus --gtk-no-debug=FLAGS"}),
     )
@@ -30,6 +44,19 @@ class Config:
         parser = ConfigParser()
         parser.read(self.path)
         return parser[section][attribute]
+
+    def section_attributes(self, section):
+        return [
+            key for key in next(x for x in self.DEFAULTS if x[0] == section)[1].keys()
+        ]
+
+    def section_items(self, section):
+        parser = ConfigParser()
+        parser.read(self.path)
+        items = {}
+        for key in self.section_attributes(section):
+            items[key] = parser[section][key]
+        return items
 
     def _setup(self):
         parser = ConfigParser()

@@ -15,6 +15,10 @@ class ImageIndexContextMenu(ContextMenuBehavior, SelectBehavior):
         self.active_menu_options = {}
         self.read_config()
         self.set_menu_options()
+        Store.dispatch(
+            "set_image_index_context_menu_children",
+            lambda: (self.read_config(), self.set_menu_options()),
+        )
 
     def set_menu_options(self):
         # [((options,), [validation])]
@@ -41,7 +45,8 @@ class ImageIndexContextMenu(ContextMenuBehavior, SelectBehavior):
                         lambda *args: self.rename(in_database=True, on_disk=False),
                     ),
                 ],
-                lambda: self.active_menu_options and len(self.selected) == 1,
+                lambda: self.active_menu_options["image_renaming"]
+                and len(self.selected) == 1,
             ),
             (
                 [

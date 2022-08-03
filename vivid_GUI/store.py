@@ -10,6 +10,7 @@ initial_state = {
     "current_index_child": "",
     "searchbar": lambda: None,
     "refresh": lambda: None,
+    "set_image_index_context_menu_children": lambda: None,
     "active_widget": "workspace",
 }
 

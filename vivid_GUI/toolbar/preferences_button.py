@@ -34,7 +34,7 @@ class PreferencesModal(ModalView):
         self.logging_value = Config().read("image_controller", "logging")
         self.sidebar_on_double_click = Config().read("sidebar", "on_double_click")
         self.wrapper = GridLayout(cols=3)
-        self.max_size = [150, 300]
+        self.max_size = [150, 100]
         self.wrapper.add_widget(self.create_sort_option())
         self.wrapper.add_widget(self.create_logging_option())
         self.wrapper.add_widget(Widget())
@@ -42,6 +42,21 @@ class PreferencesModal(ModalView):
         sidebar_widgets = self.create_sidebar_on_double_click_option()
         self.wrapper.add_widget(sidebar_widgets[0])
         self.wrapper.add_widget(sidebar_widgets[1])
+        self.wrapper.add_widget(Widget())
+        temp = GridLayout(cols=1, padding=[-5, 0, 0, 0])
+        temp.add_widget(
+            Label(
+                text="Image Index Context Menu Actions",
+                halign="left",
+            )
+        )
+        self.wrapper.add_widget(temp)
+        [
+            self.wrapper.add_widget((Widget(size_hint_max_y=45, size_hint_min_y=45)))
+            for _ in range(2)
+        ]
+        [self.wrapper.add_widget(x) for x in self.create_context_menu_options()]
+        [self.wrapper.add_widget(Widget()) for _ in range(3)]
         self.add_widget(self.wrapper)
 
     def create_sort_option(self):
@@ -87,6 +102,32 @@ class PreferencesModal(ModalView):
         )
         return [container, text_box]
 
+    def create_context_menu_options(self):
+        widgets = []
+        for name, value in Config().section_items("image_index_context_menu").items():
+            container = GridLayout(cols=3, height=25, size_hint_max_y=30)
+            container.padding = [42, 0, 0, 0]
+            container.add_widget(
+                Label(
+                    text=self.get_context_menu_text(name),
+                    halign="left",
+                    height=15,
+                )
+            )
+            checkbox = CheckBox(active=value == "True", height=15)
+            checkbox.bind(
+                on_press=lambda widget, x=name: (
+                    Config().set("image_index_context_menu", x, str(widget.active)),
+                    Store.select(
+                        lambda state: state["set_image_index_context_menu_children"]()
+                    ),
+                ),
+            )
+            container.add_widget(checkbox)
+            container.add_widget(Widget())
+            widgets.append(container)
+        return widgets
+
     def set_logging(self, widget):
         self.config.set(
             "image_controller",
@@ -110,6 +151,9 @@ class PreferencesModal(ModalView):
             "DESC": "Last Added",
             "Last Added": "DESC",
         }[text]
+
+    def get_context_menu_text(self, attribute):
+        return attribute[0].upper() + " ".join(attribute.split("_"))[1:]
 
     def set_sort(self, widget):
         self.config.set(

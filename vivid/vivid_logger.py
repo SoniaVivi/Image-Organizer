@@ -37,10 +37,10 @@ class VividLogger:
 
     def write(self, message_data, *text_args):
         level = message_data["level"]
-
-        message = "[\033[%sm %s \033[0;0m] %s" % (
+        message = "[\033[%sm %s \033[0;0m] [ %s ] %s" % (
             VividLogger.TEXT_STYLE_COLOR[level],
             VividLogger.LEVELS[level].upper(),
+            self.tag,
             message_data["message"] % text_args,
         )
         time = self.dt.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -50,7 +50,7 @@ class VividLogger:
 
     def print_history(self):
         for message_data in VividLogger.history[self.tag]:
-            print(f"{message_data[0]}| {message_data[1]}")
+            print(f"{message_data[0]} | {message_data[1]}")
 
     @classmethod
     def set_print_mode(cls, mode):

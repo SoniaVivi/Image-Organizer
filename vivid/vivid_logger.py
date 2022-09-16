@@ -33,7 +33,7 @@ class VividLogger:
         data = VividLogger.tags[self.tag][name]
         data["name"] = name
 
-        setattr(self, name, lambda *args: self.write(message_data=data, *args))
+        setattr(self, name, lambda *args: self.write(data, *args))
 
     def write(self, message_data, *text_args):
         level = message_data["level"]

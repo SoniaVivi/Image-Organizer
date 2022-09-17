@@ -55,7 +55,9 @@ Follow the same steps when updating and choose to overwrite all files. All thumb
 
    `python3 -m pip install -r ./requirements.txt`
 
-### Known Issue
+## Known Issues
+
+### Error playing .GIFs
 
 ---
 
@@ -68,6 +70,12 @@ the problem lies with Kivy. To remedy this, edit line 91 of `[PATH TO VENV]/lib/
 From `img_ol.paste(img_tmp, (0, 0), img_tmp)` to `img_ol.paste(img_tmp, (0, 0))`
 
 Why: Pillow throws a "Bad Transparency Mask" exception when the last argument is passed and Kivy then shows a blank image.
+
+### Failining tests
+
+---
+
+Occasionally when failing tests, test images created in `tests/` will not be cleaned up. This will cause various tests to fail inspite of rolling back changes. If this occurs, remove any created test images and restore the default images.
 
 ## Generating an executable
 

@@ -1,16 +1,21 @@
 import sqlite3
 from pathlib import Path
+from .vivid_logger import VividLogger as Logger
 import re
 
 
 class DatabaseController:
     DEFAULT_TABLES = ["Image", "Tag", "ImageTag", "ImageBlacklist", "Version"]
+    logger = None
     try:
         db_version
     except NameError:
         db_version = 0
 
     def __init__(self, test=False, conn=None):
+        if DatabaseController.logger is None:
+            DatabaseController.setup_logger()
+
         if conn:
             self.connection = conn
         elif test:
@@ -31,9 +36,10 @@ class DatabaseController:
         try:
             cur = self.execute(sql, tuple(attributes.values()))
             self.connection.commit()
+            self.logger.db_record("create", table, attributes.values())
             return self.execute("SELECT max(id) FROM %s" % (table,)).fetchone()[0]
         except Exception as e:
-            print(e)
+            self.logger.write(f"#create: {e}", 3)
 
     def update(self, table, id, new_values):
         for attribute in new_values:
@@ -44,7 +50,9 @@ class DatabaseController:
                     str(id),
                 ),
             )
-
+        self.logger.db_id_record(
+            "update", table, id, [attribute[1] for attribute in new_values]
+        )
         self.connection.commit()
 
     def delete(self, table, attribute_pair):
@@ -52,6 +60,7 @@ class DatabaseController:
             """DELETE FROM %s WHERE %s=?""" % (table, attribute_pair[0]),
             (attribute_pair[1],),
         )
+        self.logger.db_record("delete", table, attribute_pair)
         self.connection.commit()
 
     def find_by(self, table, attributes, fetchall=False):
@@ -205,6 +214,7 @@ class DatabaseController:
             if (version_name <= db_version_target and force_version) or (
                 version_name > db_version_target and not force_version
             ):
+                self.logger.write(f"#migrate_database: Migrating to {version_name}", 1)
                 data = compile(
                     open(
                         migration,
@@ -218,6 +228,8 @@ class DatabaseController:
                 for statement in migration_data["data"]["change"]:
                     self.execute(statement)
                     self.connection.commit()
+                    for log_message in migration_data["data"]["logging"]:
+                        self.logger.write(f"#_migrate_database: {log_message}", 1)
                 self.create("Version", {"version_number": int(version_name)})
                 DatabaseController.db_version = version_name
 
@@ -238,8 +250,9 @@ class DatabaseController:
                             AND name='{table_name}' "
         ).fetchone()[0]
         if exists == 0:
-            print(f"Creating table {table_name}")
+            self.logger.write(f"#_table_exists: Creating table {table_name}", 1)
             self._setup_database(False, tables=[table_name])
+            self.logger.write(f"#_table_exists: Created table {table_name}", 1)
 
     def _get_limit(self, table, asc=True):
         order_by = "DESC" if asc else "ASC"
@@ -283,3 +296,13 @@ class DatabaseController:
             conn.execute(table_sql[table])
         conn.commit()
         return conn if test == True else None
+
+    @classmethod
+    def setup_logger(cls):
+        DatabaseController.logger = Logger("Database Controller")
+        DatabaseController.logger.register(
+            "db_record", "#%s: Table: %s Values: %s", level=1
+        )
+        DatabaseController.logger.register(
+            "db_id_record", "#%s: Table: %s Id: %s Values: %s", level=1
+        )

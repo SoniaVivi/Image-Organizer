@@ -9,16 +9,20 @@ from pathlib import Path
 from .config import Config
 import random, string
 import fleep
+from .vivid_logger import VividLogger as Logger
 
 
 class ImageController:
     blacklist = Blacklist()
     logging = Config().read("image_controller", "logging")
+    logger = None
 
     def __init__(self, db=None, test=False, **kwargs):
         self.table_name = "Image"
-        self._create_thumbnails_path(test)
         self.db = db if db else DatabaseController(test)
+        if ImageController.logger is None:
+            ImageController.setup_logger()
+        self._create_thumbnails_path(test)
         self.use_blacklist = kwargs.get("use_blacklist", True)
         self._retrieve_blacklisted()
 
@@ -31,20 +35,7 @@ class ImageController:
 
     def add_image(self, path, **kwargs):
         img_hash = self._get_hash(path)
-        blacklist_check = kwargs.get("blacklist_check", True)
-
-        if blacklist_check:
-            if self.is_blacklisted((img_hash, "hash")) or self.is_blacklisted(
-                (path, "path")
-            ):
-                if ImageController.logging == "True":
-                    print(
-                        f"Skipping {path} | Reason: Blacklisted path or directory ancestor"
-                    )
-                return self
-        if not self._is_valid(path, img_hash, **kwargs):
-            if ImageController.logging == "True":
-                print(f"Skipping {path} | Reason: Image is invalid or already exists")
+        if self._before_add_image(path=path, img_hash=img_hash, **kwargs) == -1:
             return self
 
         name = self._generate_name(path, img_hash, **kwargs)
@@ -65,12 +56,12 @@ class ImageController:
             ),
         )
         self._create_thumbnail(path, record_id)
-        if ImageController.logging == "True":
-            print(f"Added {path}")
+        self.logger.added("add_image", path, "Image")
         return self
 
     def add_directory(self, path, toplevel_only=True, **kwargs):
         if self.is_blacklisted((path, "directory")):
+            self.logger.skip("add_directory", path, "Blacklisted directory")
             return self
         for file in get_files(path, toplevel_only):
             self.add_image(file.path, **kwargs)
@@ -80,6 +71,7 @@ class ImageController:
         self._remove_thumbnail(path)
         should_blacklist = kwargs.get("blacklist", False)
         image_data = self.db.find_by("Image", {"path": path})
+        self.logger.write(f"#remove: Removing {path} from database", 0)
         self.db.delete("Image", ("path", path))
 
         if should_blacklist == "hash" or should_blacklist == "all":
@@ -96,6 +88,7 @@ class ImageController:
     def blacklist_image(self, textable, textable_type):
         if self.db.exists("ImageBlacklist", {"textable": textable}):
             return self
+        self.logger.blacklist("blacklist_image", textable_type, textable)
         self.db.create(
             "ImageBlacklist", {"textable": textable, "textable_type": textable_type}
         )
@@ -104,6 +97,7 @@ class ImageController:
     def blacklist_directory(self, path):
         if self.db.exists("ImageBlacklist", {"textable": path}):
             return self
+        self.logger.blacklist("blacklist_directory", "directory", path)
         self.db.create(
             "ImageBlackList", {"textable": path, "textable_type": "directory"}
         )
@@ -125,6 +119,7 @@ class ImageController:
 
         if on_disk:
             new_path = f"{os.path.split(path)[0]}/{new_name}.{img_data['image_type']}"
+            ImageController.logger.rename("rename", path, new_path, "on disk")
 
             if os.path.exists(new_path):
                 return img_path
@@ -134,6 +129,7 @@ class ImageController:
             self.db.update("Image", img_data["id"], (img_path,))
 
         if in_db:
+            ImageController.logger.rename("rename", path, new_path, "in database")
             self.db.update(
                 "Image",
                 img_data["id"],
@@ -151,6 +147,10 @@ class ImageController:
         for image in self._each_image():
             path = image["path"]
             if not exists(path):
+                self.logger.write(
+                    f"#existance_check: Removing thumbnail belong to id={image['id']} and path={path}",
+                    0,
+                )
                 self.remove(path, db_only=True)
 
     def is_blacklisted(self, data=()):
@@ -178,6 +178,10 @@ class ImageController:
     def update_metadata(self, img_ids, metadata):
         if type(img_ids) != list:
             img_ids = [img_ids]
+        self.logger.write(
+            f"#update_metadata: Updating images with id('s)={img_ids} to value('s)={list(metadata.items())}",
+            0,
+        )
         for img_id in img_ids:
             self.db.update(
                 "Image",
@@ -188,6 +192,24 @@ class ImageController:
     @classmethod
     def read_config(cls):
         ImageController.logging = Config().read("image_controller", "logging")
+
+    def _before_add_image(self, **kwargs):
+        blacklist_check = kwargs.get("blacklist_check", True)
+        path = kwargs["path"]
+        img_hash = kwargs["img_hash"]
+
+        if blacklist_check:
+            if self.is_blacklisted((img_hash, "hash")):
+                self.logger.skip("add_image", path, "Blacklisted path")
+                return -1
+            if self.is_blacklisted((path, "path")):
+                self.logger.skip(
+                    "add_image", path, "Blacklisted path or directory ancestor"
+                )
+                return -1
+        if not self._is_valid(**kwargs):
+            self.logger.skip("add_image", path, "Image is invalid or already exists")
+            return -1
 
     def _get_image_type(self, path):
         with open(path, "rb") as file:
@@ -267,3 +289,13 @@ class ImageController:
 
     def _random_string(self, length):
         return "".join(random.choice(string.ascii_lowercase) for i in range(length))
+
+    @classmethod
+    def setup_logger(self):
+        ImageController.logger = Logger("Image Controller")
+        ImageController.logger.register(
+            "skip", "#%s: Skipping %s | Reason: %s", level=0
+        )
+        ImageController.logger.register("added", "#%s: Added %s to %s table", level=0)
+        ImageController.logger.register("blacklist", "#%s: Blacklisting %s %s", level=0)
+        ImageController.logger.register("rename", "#%s: Renaming %s to %s %s", level=0)

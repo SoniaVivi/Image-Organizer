@@ -1,5 +1,6 @@
 from .database_controller import DatabaseController
 from collections import Counter
+from .vivid_logger import VividLogger as Logger
 
 
 class TagController:
@@ -8,6 +9,7 @@ class TagController:
     def __init__(self, db=None, test=False):
         self.db = db if db else DatabaseController(test)
         self.image_table_columns = self.db.get_columns("Image")
+        self.logger = Logger("Tag Controller")
 
     def _create(self, tag_name):
         if not self.db.exists("Tag", ("name", tag_name.lower())):
@@ -27,9 +29,13 @@ class TagController:
 
     def all(self, value=None):
         if type(value) == int:
-            return self._all_from_image_id(value)
+            result = self._all_from_image_id(value)
+            self.logger.write(f"#all: Retrieved tags: {result}", 0)
+            return result
         elif type(value) == str:
-            return self._all_from_tag_name(value)
+            result = self._all_from_tag_name(value)
+            self.logger.write(f"#all: Retrieved images: {[x['id'] for x in result]}", 0)
+            return result
 
     def remove(self, id, tag_name):
         tag_id = self.db.get_id("Tag", {"name": tag_name})

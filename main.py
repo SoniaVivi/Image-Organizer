@@ -16,7 +16,10 @@ from vivid_GUI import sidebar
 from vivid_GUI.image_index.image_index_container import ImageIndexContainer
 from vivid_GUI.toolbar.toolbar import Toolbar
 from vivid.file_exists import file_exists
+from vivid.database_controller import DatabaseController
 import os
+
+DatabaseController.read_config()
 
 
 class Workspace(Widget):

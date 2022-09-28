@@ -183,16 +183,4 @@ Blacklists a directory. Path must be an absolute path. Returns self.
 
 Checks if path, directory, or hash is blacklisted.
 
-data must be in the following format: [textable, textable_type]
-
-## Miscellaneous
-
-### read_config() # => None
-
----
-
-Reads config and sets class variables to their corresponding config value.
-
-```
-ImageController.read_config()
-```
+Data must be in the following format: [textable, textable_type]

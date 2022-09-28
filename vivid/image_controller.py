@@ -6,7 +6,6 @@ from .database_controller import DatabaseController
 from .blacklist import Blacklist
 from os.path import isdir, isfile, exists
 from pathlib import Path
-from .config import Config
 import random, string
 import fleep
 from .vivid_logger import VividLogger as Logger
@@ -14,7 +13,6 @@ from .vivid_logger import VividLogger as Logger
 
 class ImageController:
     blacklist = Blacklist()
-    logging = Config().read("image_controller", "logging")
     middleware = {"add_image": []}
     logger = None
 
@@ -191,10 +189,6 @@ class ImageController:
                 img_id,
                 [(attribute, value) for attribute, value in metadata.items()],
             )
-
-    @classmethod
-    def read_config(cls):
-        ImageController.logging = Config().read("image_controller", "logging")
 
     def _before_add_image(self, **kwargs):
         blacklist_check = kwargs.get("blacklist_check", True)

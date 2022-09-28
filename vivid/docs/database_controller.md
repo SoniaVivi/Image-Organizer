@@ -319,3 +319,13 @@ Returns id of the first matched record or None if not found.
 ---
 
 Returns a dict containing record data returned by an sql operation as values and table columns as keys.
+
+### read_config() # => None
+
+---
+
+Reads config and sets class variables to their corresponding config value.
+
+```
+DatabaseController.read_config()
+```

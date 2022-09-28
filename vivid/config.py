@@ -22,7 +22,7 @@ class Config:
                 "hash_searching": True,
             },
         ),
-        ("image_controller", {"logging": False}),
+        ("general", {"logging": False}),
         ("sidebar", {"on_double_click": "nohup nautilus --gtk-no-debug=FLAGS"}),
     )
 

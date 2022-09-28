@@ -2,6 +2,7 @@ import sqlite3
 from pathlib import Path
 from .vivid_logger import VividLogger as Logger
 import re
+from .config import Config
 
 
 class DatabaseController:
@@ -306,3 +307,10 @@ class DatabaseController:
         DatabaseController.logger.register(
             "db_id_record", "#%s: Table: %s Id: %s Values: %s", level=1
         )
+
+    @classmethod
+    def read_config(cls):
+        if Config().read("general", "logging") == "True":
+            Logger.print_mode = "console"
+        else:
+            Logger.print_mode = "history"

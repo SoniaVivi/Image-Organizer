@@ -151,6 +151,14 @@ class TestImageController:
         assert self.db.find_by("Image", {"id": 3})["creator"] == "sudo"
         assert self.db.find_by("Image", {"id": 3})["source"] == "example.com"
 
+    def test_add_image_middleware(self):
+        self._reset_table()
+        ic.ImageController.middleware["add_image"].append(
+            lambda data, img_con: {**data, "hash": "nyaarlathotep"}
+        )
+        self.img.add(IMG_PATH + "cat1.jpg")
+        assert self.db.find_by("Image", {"id": 1})["hash"] == "nyaarlathotep"
+
     def _reset_table(self):
         self._remove_thumbnails()
         self.db.connection.execute("DROP TABLE Image")

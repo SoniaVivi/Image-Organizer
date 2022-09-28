@@ -15,6 +15,7 @@ from .vivid_logger import VividLogger as Logger
 class ImageController:
     blacklist = Blacklist()
     logging = Config().read("image_controller", "logging")
+    middleware = {"add_image": []}
     logger = None
 
     def __init__(self, db=None, test=False, **kwargs):
@@ -46,15 +47,17 @@ class ImageController:
             self._get_image_type(path),
         ]
 
-        record_id = self.db.create(
-            self.table_name,
-            dict(
-                zip(
-                    list(map(lambda x: x[0], attribute_pairs)),
-                    list(map(lambda x: x[1], attribute_pairs)),
-                )
-            ),
+        data = dict(
+            zip(
+                list(map(lambda x: x[0], attribute_pairs)),
+                list(map(lambda x: x[1], attribute_pairs)),
+            )
         )
+
+        for middleware in self.middleware["add_image"]:
+            data = middleware(data, self)
+
+        record_id = self.db.create(self.table_name, data)
         self._create_thumbnail(path, record_id)
         self.logger.added("add_image", path, "Image")
         return self

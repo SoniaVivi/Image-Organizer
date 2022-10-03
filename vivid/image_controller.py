@@ -296,3 +296,25 @@ class ImageController:
         ImageController.logger.register("added", "#%s: Added %s to %s table", level=0)
         ImageController.logger.register("blacklist", "#%s: Blacklisting %s %s", level=0)
         ImageController.logger.register("rename", "#%s: Renaming %s to %s %s", level=0)
+
+    @classmethod
+    def add_middleware(cls, key, **kwargs):
+        path = kwargs.get("path", None)
+        middleware = kwargs.get("middleware", None)
+        if path is not None:
+            data = compile(
+                open(
+                    Path(path),
+                    mode="rb",
+                ).read(),
+                filename=path,
+                mode="exec",
+            )
+            temp = {}
+            exec(data, globals(), temp), temp["plugin"]
+            middleware = temp["plugin"]
+        cls.logger.write(
+            f"#add_middleware: Adding {key} middleware {'with path'+path if path is not None else ''}",
+            level=1,
+        )
+        ImageController.middleware[key].append(middleware)

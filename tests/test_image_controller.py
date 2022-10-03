@@ -1,6 +1,6 @@
 from vivid import database_controller as dc
 from vivid import image_controller as ic
-from .helpers import IMG_PATH, THUMBNAIL_PATH, file_exists
+from .helpers import CURRENT_PATH, IMG_PATH, THUMBNAIL_PATH, file_exists
 from vivid import filesearch as fs
 from pathlib import Path
 import os
@@ -159,6 +159,15 @@ class TestImageController:
         self.img.add(IMG_PATH + "cat1.jpg")
         assert self.db.find_by("Image", {"id": 1})["hash"] == "nyaarlathotep"
 
+    def test_add_middleware(self):
+        self._reset_table()
+        ic.ImageController.add_middleware(
+            "add_image",
+            path=CURRENT_PATH + "/tests/middleware/image_controller/hash_to_meow.py",
+        )
+        self.img.add(IMG_PATH + "cat1.jpg")
+        assert self.db.get_first("Image")["hash"] == "meow"
+
     def _reset_table(self):
         self._remove_thumbnails()
         self.db.connection.execute("DROP TABLE Image")
@@ -166,6 +175,7 @@ class TestImageController:
         self.db.connection.execute("DROP TABLE Tag")
         self.db.connection.execute("DROP TABLE ImageBlacklist")
         TestImageController.db.connection = self.db._setup_database(True)
+        ic.ImageController.middleware = {"add_image": []}
         Blacklist.entry_node = None
 
     def _temp_img(self, func, test, arg=None, path=IMG_PATH):

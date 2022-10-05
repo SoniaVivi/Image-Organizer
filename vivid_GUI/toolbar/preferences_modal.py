@@ -7,7 +7,10 @@ from vivid.database_controller import DatabaseController
 from vivid.image_controller import DatabaseController
 from kivy.uix.textinput import TextInput
 from vivid.config import Config
+from vivid_GUI.widgets.LabeledCheckbox import LabeledCheckbox
 from ..store import Store
+from ..widgets.LabeledRadio import LabeledRadio
+from ..widgets.OptionContainer import OptionContainer
 
 
 class PreferencesModal(ModalView):
@@ -28,14 +31,9 @@ class PreferencesModal(ModalView):
         self.wrapper.add_widget(sidebar_widgets[0])
         self.wrapper.add_widget(sidebar_widgets[1])
         self.wrapper.add_widget(Widget())
-        temp = GridLayout(cols=1, padding=[-5, 0, 0, 0])
-        temp.add_widget(
-            Label(
-                text="Image Index Context Menu Actions",
-                halign="left",
-            )
+        self.wrapper.add_widget(
+            self._create_section_header("Image Index Context Menu Actions")
         )
-        self.wrapper.add_widget(temp)
         [
             self.wrapper.add_widget((Widget(size_hint_max_y=45, size_hint_min_y=45)))
             for _ in range(2)
@@ -44,13 +42,23 @@ class PreferencesModal(ModalView):
         [self.wrapper.add_widget(Widget()) for _ in range(3)]
         self.add_widget(self.wrapper)
 
+    def _create_section_header(self, text):
+        temp = GridLayout(cols=1, padding=[-5, 0, 0, 0])
+        temp.add_widget(
+            Label(
+                text=text,
+                halign="left",
+            )
+        )
+        return temp
+
     def create_sort_option(self):
-        container = self._create_option_container(label="Sort Order")
+        container = OptionContainer(label="Sort Order")
         buttons_container = container.children[0]
 
         for sort in ["ASC", "DESC"]:
             buttons_container.add_widget(
-                self._create_labeled_radio(
+                LabeledRadio(
                     "sort",
                     sort == self.current_sort,
                     self.set_sort,
@@ -60,11 +68,11 @@ class PreferencesModal(ModalView):
         return container
 
     def create_logging_option(self):
-        container = self._create_option_container(label="Logging")
+        container = OptionContainer(label="Logging")
         buttons_container = container.children[0]
         for text in ["True", "False"]:
             buttons_container.add_widget(
-                self._create_labeled_radio(
+                LabeledRadio(
                     "logging",
                     text == self.logging_value,
                     self.set_logging,
@@ -74,7 +82,7 @@ class PreferencesModal(ModalView):
         return container
 
     def create_sidebar_on_double_click_option(self):
-        container = self._create_option_container(
+        container = OptionContainer(
             label="Run command on double click",
         )
         container.padding = (120, 0)
@@ -90,27 +98,20 @@ class PreferencesModal(ModalView):
     def create_context_menu_options(self):
         widgets = []
         for name, value in Config().section_items("image_index_context_menu").items():
-            container = GridLayout(cols=3, height=25, size_hint_max_y=30)
-            container.padding = [42, 0, 0, 0]
-            container.add_widget(
-                Label(
-                    text=self.get_context_menu_text(name),
-                    halign="left",
-                    height=15,
+            widgets.append(
+                LabeledCheckbox(
+                    self.get_context_menu_text(name),
+                    value,
+                    lambda widget, x=name: (
+                        Config().set("image_index_context_menu", x, str(widget.active)),
+                        Store.select(
+                            lambda state: state[
+                                "set_image_index_context_menu_children"
+                            ]()
+                        ),
+                    ),
                 )
             )
-            checkbox = CheckBox(active=value == "True", height=15)
-            checkbox.bind(
-                on_press=lambda widget, x=name: (
-                    Config().set("image_index_context_menu", x, str(widget.active)),
-                    Store.select(
-                        lambda state: state["set_image_index_context_menu_children"]()
-                    ),
-                ),
-            )
-            container.add_widget(checkbox)
-            container.add_widget(Widget())
-            widgets.append(container)
         return widgets
 
     def set_logging(self, widget):
@@ -144,22 +145,3 @@ class PreferencesModal(ModalView):
         self.config.set(
             "image_index", "sort", self.get_sort_text(widget.parent.children[0].text)
         )
-
-    def _create_option_container(self, label=""):
-        container = GridLayout(cols=2, size_hint_max_y=100)
-        for _ in range(2):
-            container.add_widget(Widget())
-        container.add_widget(Label(text=label, size_hint_max_x=self.max_size[0]))
-        container.add_widget(GridLayout(cols=1))
-        return container
-
-    def _create_labeled_radio(self, group, active, on_press, text):
-        padding_top = 15
-        wrapper = GridLayout(rows=2, cols=2, size_hint_max_x=150, size_hint_min_y=35)
-        checkbox = CheckBox(group=group, active=active)
-        checkbox.bind(on_press=on_press)
-        for _ in range(2):
-            wrapper.add_widget(Widget(size_hint_min_y=padding_top))
-        wrapper.add_widget(checkbox)
-        wrapper.add_widget(Label(text=text))
-        return wrapper

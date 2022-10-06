@@ -65,7 +65,7 @@ class ImageController:
             self.logger.skip("add_directory", path, "Blacklisted directory")
             return self
         for file in get_files(path, toplevel_only):
-            self.add_image(file.path, **kwargs)
+            self.add_image(str(file), **kwargs)
         return self
 
     def remove(self, path, **kwargs):

@@ -208,7 +208,7 @@ class TestImageController:
 
     def _remove_thumbnails(self):
         if os.path.isdir(THUMBNAIL_PATH) == True:
-            [os.remove(file.path) for file in fs.get_files(THUMBNAIL_PATH)]
+            [os.remove(str(file)) for file in fs.get_files(THUMBNAIL_PATH)]
 
     def _thumbnails_helper(self, tests):
         results = [test() for test in tests]

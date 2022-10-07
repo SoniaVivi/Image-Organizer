@@ -13,7 +13,7 @@ from .vivid_logger import VividLogger as Logger
 
 class ImageController:
     blacklist = Blacklist()
-    middleware = {"add_image": []}
+    middleware = {"add_image": {"before": [], "after": []}}
     logger = None
 
     def __init__(self, db=None, test=False, **kwargs):
@@ -52,12 +52,14 @@ class ImageController:
             )
         )
 
-        for middleware in self.middleware["add_image"]:
+        for middleware in self.middleware["add_image"]["before"]:
             data = middleware(data, self)
 
         record_id = self.db.create(self.table_name, data)
         self._create_thumbnail(path, record_id)
         self.logger.added("add_image", path, "Image")
+        for middleware in self.middleware["add_image"]["after"]:
+            middleware(data, self)
         return self
 
     def add_directory(self, path, toplevel_only=True, **kwargs):
@@ -300,7 +302,7 @@ class ImageController:
     @classmethod
     def add_middleware(cls, key, **kwargs):
         path = kwargs.get("path", None)
-        middleware = kwargs.get("middleware", None)
+        middleware = kwargs.get("middleware", {})
         if path is not None:
             data = compile(
                 open(
@@ -310,11 +312,11 @@ class ImageController:
                 filename=path,
                 mode="exec",
             )
-            temp = {}
-            exec(data, globals(), temp), temp["plugin"]
-            middleware = temp["plugin"]
+            exec(data, globals(), middleware),
         cls.logger.write(
             f"#add_middleware: Adding {key} middleware {'with path'+path if path is not None else ''}",
             level=1,
         )
-        ImageController.middleware[key].append(middleware)
+        for (keyword, func) in middleware.items():
+            if keyword in ["before", "during", "after"]:
+                ImageController.middleware[key][keyword].append(func)

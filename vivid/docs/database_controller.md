@@ -327,5 +327,5 @@ Returns a dict containing record data returned by an sql operation as values and
 Reads config and sets class variables to their corresponding config value.
 
 ```
-DatabaseController.read_config()
+>>> DatabaseController.read_config()
 ```

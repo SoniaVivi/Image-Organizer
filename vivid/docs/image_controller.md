@@ -184,3 +184,55 @@ Blacklists a directory. Path must be an absolute path. Returns self.
 Checks if path, directory, or hash is blacklisted.
 
 Data must be in the following format: [textable, textable_type]
+
+## Plugins
+
+### Structure
+
+---
+
+Plugins must contain the following:
+
+- A string named "title"
+
+- A string named "description"
+
+They may contain functions named the following:
+
+- before
+
+- during
+
+- after
+
+add_image before and after functions are passed 2 args in the following order:
+
+- Data from the image to be added
+
+- The ImageController instance that is adding the image
+
+Currently only plugins for #add_image before and after are supported.
+
+### add_middleware(key[str], \*\*kwargs) # => None
+
+---
+
+Adds
+
+- A function
+
+or
+
+- A group of functions from a file
+
+to ImageController.middleware
+
+Keyword Arguments:
+
+- path - Default None. Must be a string containing a path if passed.
+
+- middleware - Default {}. Must be a dict containing "before", "during", or "after" keys and respective functions if passed.
+
+```
+>>> ImageController.add_middleware("add_image", path="./vivid_GUI/plugins/add_image/")
+```

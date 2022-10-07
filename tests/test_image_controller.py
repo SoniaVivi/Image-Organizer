@@ -153,7 +153,7 @@ class TestImageController:
 
     def test_add_image_middleware(self):
         self._reset_table()
-        ic.ImageController.middleware["add_image"].append(
+        ic.ImageController.middleware["add_image"]["before"].append(
             lambda data, img_con: {**data, "hash": "nyaarlathotep"}
         )
         self.img.add(IMG_PATH + "cat1.jpg")
@@ -175,7 +175,7 @@ class TestImageController:
         self.db.connection.execute("DROP TABLE Tag")
         self.db.connection.execute("DROP TABLE ImageBlacklist")
         TestImageController.db.connection = self.db._setup_database(True)
-        ic.ImageController.middleware = {"add_image": []}
+        ic.ImageController.middleware = {"add_image": {"before": [], "after": []}}
         Blacklist.entry_node = None
 
     def _temp_img(self, func, test, arg=None, path=IMG_PATH):

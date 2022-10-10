@@ -1,7 +1,7 @@
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.checkbox import CheckBox
-from kivy.uix.label import Label
 from kivy.uix.widget import Widget
+from vivid_GUI.widgets.DynamicLabel import DynamicLabel
 
 
 class LabeledRadio(GridLayout):
@@ -17,4 +17,4 @@ class LabeledRadio(GridLayout):
         for _ in range(2):
             self.add_widget(Widget(size_hint_min_y=padding_top))
         self.add_widget(checkbox)
-        self.add_widget(Label(text=text))
+        self.add_widget(DynamicLabel(text=text))

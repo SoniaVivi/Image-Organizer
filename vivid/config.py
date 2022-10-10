@@ -1,4 +1,5 @@
 from configparser import ConfigParser
+from email import parser
 from os.path import isfile
 
 
@@ -24,6 +25,7 @@ class Config:
         ),
         ("general", {"logging": False}),
         ("sidebar", {"on_double_click": "nohup nautilus --gtk-no-debug=FLAGS"}),
+        ("plugins", {}),
     )
 
     def __init__(self, path="./config"):
@@ -44,6 +46,11 @@ class Config:
         parser = ConfigParser()
         parser.read(self.path)
         return parser[section][attribute]
+
+    def exists(self, section, attribute):
+        parser = ConfigParser()
+        parser.read(self.path)
+        return attribute in parser[section]
 
     def section_attributes(self, section):
         return [

@@ -31,3 +31,7 @@ class TestConfig:
             "folder_searching": "True",
             "hash_searching": "True",
         }
+
+    def test_exists(self):
+        assert Config().exists("image_index", "sort") == True
+        assert Config().exists("image_index", "Meowmere") == False

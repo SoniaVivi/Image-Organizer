@@ -314,7 +314,7 @@ class ImageController:
             )
             exec(data, globals(), middleware),
         cls.logger.write(
-            f"#add_middleware: Adding {key} middleware {'with path'+path if path is not None else ''}",
+            f"#add_middleware: Adding {key} middleware {'with path '+path if path is not None else ''}",
             level=1,
         )
         for (keyword, func) in middleware.items():

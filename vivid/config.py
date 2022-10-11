@@ -53,9 +53,9 @@ class Config:
         return attribute in parser[section]
 
     def section_attributes(self, section):
-        return [
-            key for key in next(x for x in self.DEFAULTS if x[0] == section)[1].keys()
-        ]
+        parser = ConfigParser()
+        parser.read(self.path)
+        return [key for key in parser[section]]
 
     def section_items(self, section):
         parser = ConfigParser()

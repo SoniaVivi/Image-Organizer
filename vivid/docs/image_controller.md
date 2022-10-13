@@ -1,4 +1,4 @@
-Last Modified: 1.5.0
+Last Modified: 2.0-dev
 
 # class Image Controller
 
@@ -185,7 +185,7 @@ Checks if path, directory, or hash is blacklisted.
 
 Data must be in the following format: [textable, textable_type]
 
-## Plugins
+## Plugins and Middleware
 
 ### Structure
 
@@ -201,8 +201,6 @@ They may contain functions named the following:
 
 - before
 
-- during
-
 - after
 
 add_image before and after functions are passed 2 args in the following order:
@@ -211,7 +209,7 @@ add_image before and after functions are passed 2 args in the following order:
 
 - The ImageController instance that is adding the image
 
-Currently only plugins for #add_image before and after are supported.
+Currently only plugins for #add_image are supported.
 
 ### add_middleware(key[str], \*\*kwargs) # => None
 
@@ -231,7 +229,7 @@ Keyword Arguments:
 
 - path - Default None. Must be a string containing a path if passed.
 
-- middleware - Default {}. Must be a dict containing "before", "during", or "after" keys and respective functions if passed.
+- middleware - Default {}. Must be a dict containing "before" or "after" keys and respective functions if passed.
 
 ```
 >>> ImageController.add_middleware("add_image", path="./vivid_GUI/plugins/add_image/")

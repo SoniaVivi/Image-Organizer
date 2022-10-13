@@ -3,7 +3,7 @@ from datetime import datetime
 
 class VividLogger:
     dt = datetime
-    # { name: {} }
+    # { tag_name: { message_name: { message: str, level: int } } }
     tags = {}
     # { tag_name: [ [timestamp, message] ]}
     history = {}
